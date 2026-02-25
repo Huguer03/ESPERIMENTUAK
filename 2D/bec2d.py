@@ -1,6 +1,6 @@
 import numpy as np 
 from scipy.fft import fft2, ifft2, fftfreq 
-from scipy.ndimage import map_coordinates
+from scipy.sparse.linalg import bicgstab
 
 class Grid:
     """
@@ -10,10 +10,10 @@ class Grid:
         """
         N:   Zenbat puntutan banatuko dugu, tupla (Nx, Ny)
         L:   Kaxaren luzera, tupla (Lx, Ly) eta [-Li/2,Li/2]
-        dim: Dimentsioa (W.I.P)
         """
         self.Nx = N[0]
         self.Ny = N[1]
+        self.N  = N[0]*N[1]
         self.Lx = L[0]
         self.Ly = L[1]
         self.dx = self.Lx/self.Nx
@@ -30,6 +30,8 @@ class Grid:
         self.Kx, self.Ky = np.meshgrid(self.kx, self.ky, indexing='ij')
         self.K2 = self.Kx**2 + self.Ky**2
 
+        self.mesh_shape = (self.Nx, self.Ny)
+
     def fft(self, psi):
         return fft2(psi)
 
@@ -40,7 +42,7 @@ class Grid:
         """
         Laplazearra k espazioan: -|K|^2 * psi_k
         """
-        return self.K2**2 * psi_k
+        return - self.K2**2 * psi_k
 
 class WaveFunction:
     """
@@ -94,11 +96,9 @@ class SSFM:
         self.potential = potential
         self.g         = g
         self.Omega     = Omega
-
-    def rot(self, psi, angle):
-        """
-        Uhin-funtzioaren biraketa egiten du. psi'(r) = psi(R^-1 r)
-        """
+        self.rot       = CrankNicolsonOptimized(grid, Omega)
+    
+    """def rot(self, psi, angle):
         X, Y = self.grid.X, self.grid.Y
 
         cos_a = np.cos(angle)
@@ -107,11 +107,14 @@ class SSFM:
         X_rot =  X * cos_a + Y * sin_a
         Y_rot = -X * sin_a + Y * cos_a
 
-        coords   = np.array([X_rot.ravel(), Y_rot.ravel()])
-        psi_flat = map_coordinates(psi.real, coords, order=1, mode='wrap') \
-                 + 1j * map_coordinates(psi.imag, coords, order=1, mode='wrap')
+        I = (X_rot + self.grid.Lx/2) / self.grid.dx
+        J = (Y_rot + self.grid.Ly/2) / self.grid.dy
 
-        return psi_flat.reshape(psi.shape)
+        coords = np.array([I.ravel(), J.ravel()])
+        
+        psi_real = map_coordinates(psi.real, coords, order=3, mode='wrap').reshape(psi.shape)
+        psi_imag = map_coordinates(psi.imag, coords, order=3, mode='wrap').reshape(psi.shape)
+        return psi_real + 1j * psi_imag"""
 
     def step(self, psi, dt, imag=False):
         """
@@ -126,7 +129,7 @@ class SSFM:
 
             # Pausua K espazioan
             psi_k  = self.grid.fft(psi1)
-            psi_k *= np.exp(-0.5 * self.grid.K2 * dt)
+            psi_k *= np.exp(-self.grid.K2 * dt)
             psi2   = self.grid.ifft(psi_k)
 
             # Pausua berriz Potentzialean
@@ -142,7 +145,7 @@ class SSFM:
 
             # Biraketa egotekotan, erdi pausua sartu
             if self.Omega != 0:
-                psi2 = self.rot(psi1, self.Omega * dt/2)
+                psi2 = self.crank_nicolson_fft(psi1, self.Omega, dt/2, self.grid)
             else:
                 psi2 = psi1
 
@@ -153,12 +156,12 @@ class SSFM:
 
             # Biraketa egotekotan, erdi pausua sartu
             if self.Omega != 0:
-                psi4 = self.rot(psi3, self.Omega * dt/2)
+                psi4 = self.crank_nicolson_fft(psi3, self.Omega, dt/2, self.grid)
             else:
                 psi4 = psi3
 
             # Pausua berriz Potentzialean
-            psi_new = np.exp(-1j * (V * self.g * np.abs(psi4)**2) * dt/2) * psi2
+            psi_new = np.exp(-1j * (V * self.g * np.abs(psi4)**2) * dt/2) * psi4
             return psi_new
 
     def evol(self, psi, final_time, dt, imag=False, callback=None):
@@ -174,6 +177,28 @@ class SSFM:
                     callback(t, psi_current)
 
         return psi_current
+    
+    def evolcool(self, psi, dt, converge, imag=True, callback=None):
+        t           = 0.0
+        psi_current = psi.copy()
+        psi_previus = np.zeros(self.grid.mesh_shape, dtype=complex)
+            
+        while not self.check_convergence(psi_previus, psi_current, converge):
+            psi_previus = psi_current.copy()
+            psi_current = self.step(psi_current, dt, imag=imag)
+            t += dt
+
+            if callback is not None:
+                    callback(t, psi_current)
+
+        return psi_current
+
+    def check_convergence(self, psi_previus, psi_current, converge):
+        diff = np.max(np.abs(np.abs(psi_current)**2 - np.abs(psi_previus)**2))
+        if diff < converge:
+            return True
+        else:
+            return False
 
 class Simulation:
     """
@@ -187,13 +212,13 @@ class Simulation:
         self.wf        = WaveFunction(grid)
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
-    def cooling(self, tau_max, dt, callback=None):
+    def cooling(self, dt, converge=1E-10, callback=None):
         def wrapped_callback(t, psi):
             self.wf.psi = psi
             if callback:
                 callback(t, self)
 
-        self.wf.psi = self.ssfm.evol(self.wf.psi, tau_max, dt, imag=True, callback=wrapped_callback)
+        self.wf.psi = self.ssfm.evolcool(self.wf.psi, dt, converge=converge, imag=True,callback=wrapped_callback)
         self.wf.normalize()
     
     def hydrodynamics(self, t_max, dt, callback=None):
