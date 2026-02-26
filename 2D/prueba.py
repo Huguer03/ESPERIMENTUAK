@@ -7,16 +7,16 @@ def test():
     # 1. Configuración de la malla (Grid)
     # N: número de puntos, L: tamaño de la caja
     N = (128, 128)
-    L = (4.0, 4.0)
+    L = (20.0, 20.0)
     grid = Grid(N, L)
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(0.3, 0.4))
+    potential = TrapPotential(omega=(1.0, 1.2))
 
     # 3. Crear la simulación
     # g: constante de interacción (0 para gas ideal, >0 para repulsivo)
-    sim = Simulation(grid, potential, g=500.0, Omega=1.0)
+    sim = Simulation(grid, potential, g=1000.0, Omega=0.7, n_vortex=1)
     
     print("Iniciando proceso de cooling (Tiempo Imaginario)...")
     
@@ -38,12 +38,12 @@ def test():
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
     # Gráfico Estado Inicial
-    im0 = ax[0].imshow(initial_density, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    im0 = ax[0].imshow(initial_density, extent=[-4, 4, -4, 4])
     ax[0].set_title("Densidad Inicial (Gaussiana)")
     fig.colorbar(im0, ax=ax[0])
 
     # Gráfico Estado Final (tras cooling)
-    im1 = ax[1].imshow(final_density, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    im1 = ax[1].imshow(final_density, extent=[-4, 4, -4, 4])
     ax[1].set_title("Estado Rotado")
     fig.colorbar(im1, ax=ax[1])
 

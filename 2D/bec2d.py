@@ -1,6 +1,6 @@
 import numpy as np 
 from scipy.fft import fft2, ifft2, fftfreq 
-from scipy.sparse.linalg import bicgstab
+from scipy.ndimage import map_coordinates
 
 class Grid:
     """
@@ -42,23 +42,36 @@ class Grid:
         """
         Laplazearra k espazioan: -|K|^2 * psi_k
         """
-        return - self.K2**2 * psi_k
+        return - self.K2 * psi_k
 
 class WaveFunction:
     """
     Uhin funtzioaren logika 2D-tan.
     """
-    def __init__(self, grid, psi=None):
-        self.grid = grid
-        if psi == None:
+    def __init__(self, grid, n_vortex=0, sigma=(1.0,1.0), psi=None):
+        self.grid         = grid
+        self.n_vortex     = n_vortex
+        self.sigma_x      = sigma[0]
+        self.sigma_y      = sigma[1]
+        if psi == None and self.n_vortex == 0:
             # Perfil Gausstarra emango diogu
-            sigma_x = 1.0
-            sigma_y = 1.0
-
-            psi = np.exp(-0.5 * ((self.grid.X / sigma_x)**2 + (self.grid.Y / sigma_y)**2), dtype=complex)
+            psi = np.exp(-0.5 * ((self.grid.X / self.sigma_x)**2 + (self.grid.Y / self.sigma_y)**2), dtype=complex)
+        elif psi == None  and self.n_vortex != 0:
+            psi = self.vortex_phase_mask()
 
         self.psi = psi
         self.normalize()
+    
+    def vortex_phase_mask(self):
+        """
+        Sortuko ditugu hasiak bortizeen agerpenak ahalbidetzeko
+        """
+        psi_init = np.exp(-0.5 * ((self.grid.X / self.sigma_x)**2 + (self.grid.Y / self.sigma_y)**2), dtype=complex)
+
+        phase      = np.atan2(self.grid.Y, self.grid.X)
+        phase_mask = np.exp(1j * self.n_vortex * phase)
+
+        return psi_init * phase_mask
 
     def normalize(self, A=1.0):
         """
@@ -96,25 +109,32 @@ class SSFM:
         self.potential = potential
         self.g         = g
         self.Omega     = Omega
-        self.rot       = CrankNicolsonOptimized(grid, Omega)
     
-    """def rot(self, psi, angle):
+    def rot(self, psi, angle):
         X, Y = self.grid.X, self.grid.Y
-
+    
         cos_a = np.cos(angle)
         sin_a = np.sin(angle)
-
-        X_rot =  X * cos_a + Y * sin_a
-        Y_rot = -X * sin_a + Y * cos_a
-
+        
+        # Rotación de coordenadas ANTIHORARIA (corregida)
+        X_rot =  X * cos_a - Y * sin_a  # Cambio aquí: -Y * sin_a
+        Y_rot =  X * sin_a + Y * cos_a  # Cambio aquí: +X * sin_a
+        
+        # Convertir a índices para interpolación
         I = (X_rot + self.grid.Lx/2) / self.grid.dx
         J = (Y_rot + self.grid.Ly/2) / self.grid.dy
-
+        
+        # Asegurar que los índices están dentro de los límites
+        I = np.clip(I, 0, self.grid.Nx - 1)
+        J = np.clip(J, 0, self.grid.Ny - 1)
+        
         coords = np.array([I.ravel(), J.ravel()])
         
+        # Interpolación
         psi_real = map_coordinates(psi.real, coords, order=3, mode='wrap').reshape(psi.shape)
         psi_imag = map_coordinates(psi.imag, coords, order=3, mode='wrap').reshape(psi.shape)
-        return psi_real + 1j * psi_imag"""
+        psi_rotated = psi_real + 1j * psi_imag
+        return psi_rotated
 
     def step(self, psi, dt, imag=False):
         """
@@ -124,28 +144,42 @@ class SSFM:
         V = self.potential(self.grid.X, self.grid.Y)
 
         if imag:
-            # Potentzialean erdipausua
-            psi1 = np.exp(-(V * self.g * np.abs(psi)**2) * dt/2) * psi
-
-            # Pausua K espazioan
-            psi_k  = self.grid.fft(psi1)
-            psi_k *= np.exp(-self.grid.K2 * dt)
-            psi2   = self.grid.ifft(psi_k)
-
-            # Pausua berriz Potentzialean
-            psi_new = np.exp(-(V * self.g * np.abs(psi2)**2) * dt/2) * psi2
-
-            norma    = np.sum(np.abs(psi_new)**2) * self.grid.dx * self.grid.dy 
-            psi_new /= np.sqrt(norma)
+            # Calcular el potencial químico aproximado
+            # Energía cinética en espacio k
+            psi_k = self.grid.fft(psi)
+            kin_energy = 0.5 * self.grid.ifft(self.grid.K2 * psi_k)
+            
+            # Energía potencial + interacción
+            pot_energy = (V + 0.5 * self.g * np.abs(psi)**2) * psi
+            
+            # Potencial químico (promedio)
+            mu = np.real(np.sum(np.conj(psi) * (kin_energy + pot_energy)) * self.grid.dx * self.grid.dy)
+            
+            # Propagación en tiempo imaginario CON resta de μ
+            # Medio paso en espacio real
+            psi1 = np.exp(-(V + self.g * np.abs(psi)**2 - mu) * dt/2) * psi
+            
+            # Paso en espacio k
+            psi_k = self.grid.fft(psi1)
+            psi_k *= np.exp(-0.5 * self.grid.K2 * dt)
+            psi2 = self.grid.ifft(psi_k)
+            
+            # Segundo medio paso
+            psi_new = np.exp(-(V + self.g * np.abs(psi2)**2 - mu) * dt/2) * psi2
+            
+            # Normalizar (importante en tiempo imaginario)
+            norm = np.sum(np.abs(psi_new)**2) * self.grid.dx * self.grid.dy
+            psi_new /= np.sqrt(norm)
+            
             return psi_new
 
         else:
             # Potentzialean erdipausua
-            psi1 = np.exp(-1j * (V * self.g * np.abs(psi)**2) * dt/2) * psi
+            psi1 = np.exp(-1j * (V + self.g * np.abs(psi)**2) * dt/2) * psi
 
             # Biraketa egotekotan, erdi pausua sartu
             if self.Omega != 0:
-                psi2 = self.crank_nicolson_fft(psi1, self.Omega, dt/2, self.grid)
+                psi2 = self.rot(psi1, self.Omega * dt/2)
             else:
                 psi2 = psi1
 
@@ -156,12 +190,12 @@ class SSFM:
 
             # Biraketa egotekotan, erdi pausua sartu
             if self.Omega != 0:
-                psi4 = self.crank_nicolson_fft(psi3, self.Omega, dt/2, self.grid)
+                psi4 = self.rot(psi3, self.Omega * dt/2)
             else:
                 psi4 = psi3
 
             # Pausua berriz Potentzialean
-            psi_new = np.exp(-1j * (V * self.g * np.abs(psi4)**2) * dt/2) * psi4
+            psi_new = np.exp(-1j * (V + self.g * np.abs(psi4)**2) * dt/2) * psi4
             return psi_new
 
     def evol(self, psi, final_time, dt, imag=False, callback=None):
@@ -204,12 +238,12 @@ class Simulation:
     """
     Simulazioa manipulatzeko erabiliko duguna
     """
-    def __init__(self, grid, potential, g=0, Omega=0):
+    def __init__(self, grid, potential, g=0, Omega=0, n_vortex=0, sigma=(1.0,1.0), psi=None):
         self.grid      = grid
         self.potential = potential
         self.g         = g
         self.Omega     = Omega
-        self.wf        = WaveFunction(grid)
+        self.wf        = WaveFunction(grid, n_vortex, sigma, psi)
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
     def cooling(self, dt, converge=1E-10, callback=None):
