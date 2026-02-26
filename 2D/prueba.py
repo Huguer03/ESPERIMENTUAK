@@ -1,36 +1,46 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.gridspec import GridSpec
 from bec2d import Grid, TrapPotential, Simulation
 
 def test():
     # 1. Configuración de la malla (Grid)
     # N: número de puntos, L: tamaño de la caja
-    N = (128, 128)
-    L = (20.0, 20.0)
+    N = (256, 256)
+    L = (40.0, 40.0)
     grid = Grid(N, L)
+    vortex_charges = [1, -1]
+    positions = [
+        (2.0, 0.0),   # Vórtice +1
+        (-2.0, 0.0),  # Vórtice +1
+    ]
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(1.0, 1.2))
+    potential = TrapPotential(omega=(0.6, 0.65))
 
     # 3. Crear la simulación
-    # g: constante de interacción (0 para gas ideal, >0 para repulsivo)
-    sim = Simulation(grid, potential, g=1000.0, Omega=0.7, n_vortex=1)
+    sim = Simulation(grid=grid, 
+                     potential=potential, 
+                     g=500.0, 
+                     Omega=0.4, 
+                     n_vortex=2, 
+                     vortex_charge=vortex_charges, 
+                     positions=positions
+                     )
     
     print("Iniciando proceso de cooling (Tiempo Imaginario)...")
     
     # 4. Ejecutar el cooling
     # tau_max: tiempo total de evolución imaginaria
     # dt: paso de tiempo (debe ser pequeño para estabilidad)
-    sim.cooling(dt=0.05)
+    sim.cooling(dt=0.01)
 
     initial_density = sim.wf.density().copy()
 
     print("Cooling finalizado.")
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(100.0,dt=0.02)
+    sim.hydrodynamics(25.0,dt=0.01)
 
     # 6. Visualización de resultados
     final_density = sim.wf.density()
