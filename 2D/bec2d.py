@@ -269,12 +269,32 @@ class SSFM:
             psi_with_vortices *= vortex_phase
         return psi_with_vortices
 
+    def energy(self, psi):
+        """
+        Energia kalkulatu
+        """
+        psi_k  = fft2(psi)
+        dx_psi = ifft2(1j * self.grid.Kx * psi_k)
+        dy_psi = ifft2(1j * self.grid.Ky * psi_k)
+
+        kin   = 0.5 * (np.abs(dx_psi)**2 + np.abs(dy_psi)**2)
+        E_kin = np.sum(kin) * self.grid.dx * self.grid.dy
+        V     = self.potential(self.grid.X, self.grid.Y)
+        E_pot = np.sum(V * np.abs(psi)**2) * self.grid.dx * self.grid.dy
+        E_int = (self.g / 2.0) * np.sum(np.abs(psi)**4) * self.grid.dx * self.grid.dy
+
+        Lz_psi      = -1j * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
+        expectation = np.sum(np.conj(psi) * Lz_psi) * self.grid.dx * self.grid.dy
+        E_rot       = -self.Omega * expectation.real
+
+        return E_kin + E_pot + E_int + E_rot
+
     def check_convergence(self, psi_previus, psi_current, converge):
-        diff = np.max(np.abs(np.abs(psi_current)**2 - np.abs(psi_previus)**2))
-        if diff < converge:
-            return True
-        else:
-            return False
+        E1 = self.energy(psi_current)
+        E0 = self.energy(psi_previus)
+        if E0 == 0: return False
+        rel_diff = np.abs((E1 - E0) / E0)
+        return rel_diff < converge
 
 class Simulation:
     """

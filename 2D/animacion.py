@@ -63,7 +63,7 @@ def test():
     ani = FuncAnimation(fig, animate, frames=len(times), interval=50, blit=True)
     plt.tight_layout()
     # guardar animación
-    ani.save('condensado.gif', writer='pillow', fps=20, dpi=150)
+    #ani.save('condensado.gif', writer='pillow', fps=20, dpi=150)
     plt.show()
 
 if __name__ == "__main__":
