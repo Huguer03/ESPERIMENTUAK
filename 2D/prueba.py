@@ -16,13 +16,13 @@ def test():
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(0.6, 0.65))
+    potential = TrapPotential(omega=(0.8, 0.85))
 
     # 3. Crear la simulación
     sim = Simulation(grid=grid, 
                      potential=potential, 
-                     g=500.0, 
-                     Omega=0.4, 
+                     g=200.0, 
+                     Omega=0.7, 
                      n_vortex=2, 
                      vortex_charge=vortex_charges, 
                      positions=positions

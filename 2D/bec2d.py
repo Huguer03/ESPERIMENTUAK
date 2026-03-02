@@ -83,7 +83,7 @@ class TrapPotential:
         self.omega_x, self.omega_y = omega
 
     def __call__(self, X, Y):
-        return 0.5 * (self.omega_x * X**2 + self.omega_y * Y**2)
+        return 0.5 * (self.omega_x**2 * X**2 + self.omega_y**2 * Y**2)
 
 class SSFM:
     """
@@ -122,67 +122,70 @@ class SSFM:
         psi_rotated = psi_real + 1j * psi_imag
         return psi_rotated
 
-    def step(self, psi, dt, imag=False):
+    def step(self, psi, dt):
         """
         dt pausu bat egiten du, denbora irudikarian (oinarrizko egoera bilatzeko)
         ez du biraketarik  egiten,  baina  denbora  errealean  bai  egiten duela.
         """
         V = self.potential(self.grid.X, self.grid.Y)
 
-        if imag:
-            # Calcular el potencial químico aproximado
-            # Energía cinética en espacio k
-            psi_k = self.grid.fft(psi)
-            kin_energy = 0.5 * self.grid.ifft(self.grid.K2 * psi_k)
-            
-            # Energía potencial + interacción
-            pot_energy = (V + 0.5 * self.g * np.abs(psi)**2) * psi
-            
-            # Potencial químico (promedio)
-            mu = np.real(np.sum(np.conj(psi) * (kin_energy + pot_energy)) * self.grid.dx * self.grid.dy)
-            
-            # Propagación en tiempo imaginario CON resta de μ
-            # Medio paso en espacio real
-            psi1 = np.exp(-(V + self.g * np.abs(psi)**2 - mu) * dt/2) * psi
-            
-            # Paso en espacio k
-            psi_k = self.grid.fft(psi1)
-            psi_k *= np.exp(-0.5 * self.grid.K2 * dt)
-            psi2 = self.grid.ifft(psi_k)
-            
-            # Segundo medio paso
-            psi_new = np.exp(-(V + self.g * np.abs(psi2)**2 - mu) * dt/2) * psi2
-            
-            # Normalizar (importante en tiempo imaginario)
-            norm = np.sum(np.abs(psi_new)**2) * self.grid.dx * self.grid.dy
-            psi_new /= np.sqrt(norm)
-            
-            return psi_new
+        # Potentzialean erdipausua
+        psi1 = np.exp(-1j * (V + self.g * np.abs(psi)**2) * dt/2) * psi
 
+        # Biraketa egotekotan, erdi pausua sartu
+        if self.Omega != 0:
+            psi2 = self.rot(psi1, self.Omega * dt/2)
         else:
-            # Potentzialean erdipausua
-            psi1 = np.exp(-1j * (V + self.g * np.abs(psi)**2) * dt/2) * psi
+            psi2 = psi1
 
-            # Biraketa egotekotan, erdi pausua sartu
-            if self.Omega != 0:
-                psi2 = self.rot(psi1, self.Omega * dt/2)
-            else:
-                psi2 = psi1
+        # Pausua K espazioan
+        psi_k  = self.grid.fft(psi2)
+        psi_k *= np.exp(-0.5j * self.grid.K2 * dt)
+        psi3   = self.grid.ifft(psi_k)
 
-            # Pausua K espazioan
-            psi_k  = self.grid.fft(psi2)
-            psi_k *= np.exp(-0.5j * self.grid.K2 * dt)
-            psi3   = self.grid.ifft(psi_k)
+        # Biraketa egotekotan, erdi pausua sartu
+        if self.Omega != 0:
+            psi4 = self.rot(psi3, self.Omega * dt/2)
+        else:
+            psi4 = psi3
 
-            # Biraketa egotekotan, erdi pausua sartu
-            if self.Omega != 0:
-                psi4 = self.rot(psi3, self.Omega * dt/2)
-            else:
-                psi4 = psi3
+        # Pausua berriz Potentzialean
+        psi_new = np.exp(-1j * (V + self.g * np.abs(psi4)**2) * dt/2) * psi4
+        return psi_new
+    
+    def gradient_descent_step(self, psi, dt, eta=0.01):
+        """
+        Egingo duguna izango psi_new = psi - factor * grad(E) <-- hau deribatu funtzionala izaten
+        """
+        
+        V = self.potential(self.grid.X, self.grid.Y)
 
-            # Pausua berriz Potentzialean
-            psi_new = np.exp(-1j * (V + self.g * np.abs(psi4)**2) * dt/2) * psi4
-            return psi_new
+        # Energia zinetikoa
+        psi_k    = self.grid.fft(psi)
+        grad_kin = self.grid.ifft(-self.grid.K2 * psi_k) 
+
+        # Energia potentziala
+        grad_V = V * psi
+
+        # Interakzio ez lineala
+        grad_g = self.g * np.abs(psi)**2 * psi
+
+        # Biraketa
+        if self.Omega != 0:
+            dx_psi   = self.grid.ifft(1j * self.grid.Kx * psi_k)
+            dy_psi   = self.grid.ifft(1j * self.grid.Ky * psi_k)
+            grad_rot = -1j * self.Omega * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
+        else:
+            grad_rot = 0
+ 
+        grad = -0.5 * grad_kin + grad_V + grad_g + grad_rot
+
+        psi_new = psi - eta * grad
+
+        norm = np.sum(np.abs(psi_new)**2) * self.grid.dx * self.grid.dy
+        psi_new /= np.sqrt(norm)
+
+        return psi_new
 
     def evol(self, psi, final_time, dt, imag=False, callback=None):
         steps       = int(final_time / dt)
@@ -198,20 +201,20 @@ class SSFM:
 
         return psi_current
     
-    def evolcool(self, psi, dt, n_vortex, vortex_charges=None, positions=None, converge=1E-10, imag=True, callback=None, random_seed=None):
+    def evolcool(self, psi, dt, n_vortex, vortex_charges=None, positions=None, tol=1E-5, imag=True, callback=None, random_seed=None):
         t           = 0.0
         psi_current = psi.copy()
+        psi_current  = self.vortex_phase_mask(psi_current, n_vortex, vortex_charges, positions, random_seed)
         psi_previus = np.zeros(self.grid.mesh_shape, dtype=complex)
             
-        while not self.check_convergence(psi_previus, psi_current, converge):
+        while not self.check_tolnce(psi_previus, psi_current, tol):
             psi_previus = psi_current.copy()
             psi_current = self.step(psi_current, dt, imag=imag)
             t += dt
 
             if callback is not None:
                     callback(t, psi_current)
-
-        psi_current  = self.vortex_phase_mask(psi_current, n_vortex, vortex_charges, positions, random_seed) 
+ 
         psi_current /= np.sqrt(np.sum(np.abs(psi_current)**2) * self.grid.dx * self.grid.dy)
 
         return psi_current
@@ -289,12 +292,13 @@ class SSFM:
 
         return E_kin + E_pot + E_int + E_rot
 
-    def check_convergence(self, psi_previus, psi_current, converge):
+    def check_tolnce(self, psi_previus, psi_current, tol):
         E1 = self.energy(psi_current)
         E0 = self.energy(psi_previus)
         if E0 == 0: return False
         rel_diff = np.abs((E1 - E0) / E0)
-        return rel_diff < converge
+        print(rel_diff)
+        return rel_diff < tol
 
 class Simulation:
     """
@@ -312,13 +316,13 @@ class Simulation:
         self.wf        = WaveFunction(grid, sigma, psi)
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
-    def cooling(self, dt, converge=1E-10, callback=None):
+    def cooling(self, dt, tol=1E-5, callback=None):
         def wrapped_callback(t, psi):
             self.wf.psi = psi
             if callback:
                 callback(t, self)
 
-        self.wf.psi = self.ssfm.evolcool(self.wf.psi, dt, n_vortex=self.vortex, vortex_charges=self.v_charge, positions=self.positions, converge=converge, imag=True,callback=wrapped_callback, random_seed=self.seed)
+        self.wf.psi = self.ssfm.evolcool(self.wf.psi, dt, n_vortex=self.vortex, vortex_charges=self.v_charge, positions=self.positions, tol=tol, imag=True,callback=wrapped_callback, random_seed=self.seed)
         self.wf.normalize()
     
     def hydrodynamics(self, t_max, dt, callback=None):

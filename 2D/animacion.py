@@ -14,13 +14,13 @@ def test():
     positions = [(2.0, 0.0), (-2.0, 0.0)]
 
     # Potencial
-    potential = TrapPotential(omega=(0.6, 0.65))
+    potential = TrapPotential(omega=(0.8, 0.85))
 
     # Simulación
     sim = Simulation(
         grid=grid, 
         potential=potential, 
-        g=500.0, 
+        g=200.0, 
         Omega=0.4, 
         n_vortex=2, 
         vortex_charge=vortex_charges, 
