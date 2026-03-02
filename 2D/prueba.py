@@ -8,39 +8,41 @@ def test():
     N = (256, 256)
     L = (40.0, 40.0)
     grid = Grid(N, L)
-    vortex_charges = [1, -1]
+    vortex_charges = [1, 1, 1, 1]
     positions = [
-        (2.0, 0.0),   # Vórtice +1
-        (-2.0, 0.0),  # Vórtice +1
+        (2.0, 0.0),   
+        (-2.0, 0.0),
+        (0.0, 2.0),
+        (0.0, -2.0)
     ]
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(0.8, 0.85))
+    potential = TrapPotential(omega=(1, 1))
 
     # 3. Crear la simulación
     sim = Simulation(grid=grid, 
                      potential=potential, 
-                     g=200.0, 
+                     g=500.0, 
                      Omega=0.7, 
-                     n_vortex=2, 
+                     n_vortex=4, 
                      vortex_charge=vortex_charges, 
                      positions=positions
                      )
     
-    print("Iniciando proceso de cooling (Tiempo Imaginario)...")
+    print("Iniciando proceso de cooling (Gradient descent)...")
     
     # 4. Ejecutar el cooling
     # tau_max: tiempo total de evolución imaginaria
     # dt: paso de tiempo (debe ser pequeño para estabilidad)
-    sim.cooling(dt=0.01)
+    sim.cooling(dt=0.001)
 
     initial_density = sim.wf.density().copy()
 
     print("Cooling finalizado.")
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(25.0,dt=0.01)
+    sim.hydrodynamics(2.0,dt=0.001)
 
     # 6. Visualización de resultados
     final_density = sim.wf.density()

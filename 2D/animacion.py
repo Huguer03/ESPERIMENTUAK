@@ -5,30 +5,30 @@ from bec2d import Grid, TrapPotential, Simulation
 
 def test():
     # Configuración de la malla
-    N = (128, 128)
-    L = (25.0, 25.0)
+    N = (256, 256)
+    L = (40.0, 40.0)
     grid = Grid(N, L)
     
     # Vórtices
-    vortex_charges = [1, 1]
+    vortex_charges = [1, -1]
     positions = [(2.0, 0.0), (-2.0, 0.0)]
 
     # Potencial
-    potential = TrapPotential(omega=(0.8, 0.85))
+    potential = TrapPotential(omega=(1, 1))
 
     # Simulación
     sim = Simulation(
-        grid=grid, 
-        potential=potential, 
-        g=200.0, 
-        Omega=0.4, 
-        n_vortex=2, 
-        vortex_charge=vortex_charges, 
-        positions=positions
-    )
+                    grid=grid, 
+                    potential=potential, 
+                    g=500.0, 
+                    Omega=0.7, 
+                    n_vortex=2, 
+                    vortex_charge=vortex_charges, 
+                    positions=positions
+                    )
     
     # Cooling
-    sim.cooling(dt=0.005, converge=1e-8)
+    sim.cooling(dt=0.001)
 
     print("Enfriamiento terminado")
     
@@ -41,7 +41,7 @@ def test():
         densities.append(sim.wf.density().copy())
     
     # Hidrodinámica
-    sim.hydrodynamics(5.0, dt=0.001, callback=callback)
+    sim.hydrodynamics(2.0, dt=0.001, callback=callback)
 
     print("Terminada la simulacion")
     

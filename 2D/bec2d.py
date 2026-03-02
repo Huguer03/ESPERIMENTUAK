@@ -153,7 +153,7 @@ class SSFM:
         psi_new = np.exp(-1j * (V + self.g * np.abs(psi4)**2) * dt/2) * psi4
         return psi_new
     
-    def gradient_descent_step(self, psi, dt, eta=0.01):
+    def gradient_descent_step(self, psi, dt):
         """
         Egingo duguna izango psi_new = psi - factor * grad(E) <-- hau deribatu funtzionala izaten
         """
@@ -180,20 +180,20 @@ class SSFM:
  
         grad = -0.5 * grad_kin + grad_V + grad_g + grad_rot
 
-        psi_new = psi - eta * grad
+        psi_new = psi - dt * grad
 
         norm = np.sum(np.abs(psi_new)**2) * self.grid.dx * self.grid.dy
         psi_new /= np.sqrt(norm)
 
         return psi_new
 
-    def evol(self, psi, final_time, dt, imag=False, callback=None):
+    def evol(self, psi, final_time, dt, callback=None):
         steps       = int(final_time / dt)
         t           = 0.0
         psi_current = psi.copy()
 
         for step in range(steps):
-            psi_current = self.step(psi_current, dt, imag=imag)
+            psi_current = self.step(psi_current, dt)
             t += dt
 
             if callback is not None:
@@ -201,58 +201,77 @@ class SSFM:
 
         return psi_current
     
-    def evolcool(self, psi, dt, n_vortex, vortex_charges=None, positions=None, tol=1E-5, imag=True, callback=None, random_seed=None):
+    def gradient_descent_evol(self, psi, dt, tol=1E-6, max_iter=1000000, callback=None):
         t           = 0.0
         psi_current = psi.copy()
-        psi_current  = self.vortex_phase_mask(psi_current, n_vortex, vortex_charges, positions, random_seed)
-        psi_previus = np.zeros(self.grid.mesh_shape, dtype=complex)
+        energy_old  = self.energy(psi_current)
+
+        for i in range(max_iter):
+            t          += dt
+            psi_current = self.gradient_descent_step(psi_current, dt)
+
+            if callback:
+                callback(t, psi_current)
             
-        while not self.check_tolnce(psi_previus, psi_current, tol):
-            psi_previus = psi_current.copy()
-            psi_current = self.step(psi_current, dt, imag=imag)
-            t += dt
+            if i % 10 == 0:
+                energy_new = self.energy(psi_current)
+                rel_diff = np.abs((energy_new - energy_old) / (energy_old + 1e-10))
+                print(rel_diff)
+                
+                if rel_diff < tol:
+                    return psi_current
+                    
+                energy_old = energy_new
+        
+        raise ValueError("Maximun iterations reached, the whave function does not converge.")
 
-            if callback is not None:
-                    callback(t, psi_current)
- 
-        psi_current /= np.sqrt(np.sum(np.abs(psi_current)**2) * self.grid.dx * self.grid.dy)
+    
+    def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, callback=None, random_seed=None, max_iter=1000000):
+        psi_current = psi.copy()
 
-        return psi_current
+        if n_vortex > 0: 
+            psi_current = self.vortex_phase_mask(psi            = psi_current, 
+                                                 n_vortex       = n_vortex, 
+                                                 vortex_charges = vortex_charges, 
+                                                 positions      = positions, 
+                                                 random_seed    = random_seed
+                                                 )
+            
+        psi = self.gradient_descent_evol(psi      = psi_current, 
+                                         dt       = dt,
+                                         tol      = tol,
+                                         max_iter = max_iter, 
+                                         callback = callback
+                                         )
+
+        return psi
     
     def vortex_phase_mask(self, psi, n_vortex, vortex_charges, positions, random_seed):
         if n_vortex == 0:
             return psi
         
-        # Establecer semilla aleatoria si se proporciona
         if random_seed is not None:
             np.random.seed(random_seed)
         
-        # Definir cargas de los vórtices
         if vortex_charges is None:
-            # Por defecto: todos carga +1
             vortex_charges = [1] * n_vortex
         else:
-            # Asegurar que tenemos suficientes cargas
             if len(vortex_charges) < n_vortex:
                 raise TypeError("LESS vortex charges than vortex")
             elif len(vortex_charges) > n_vortex:
                 raise TypeError("MORE vortex charges than vortex")
         
-        # Definir posiciones de los vórtices
         if positions is None:
-            # Generar posiciones aleatorias dentro de un radio
-            max_radius = min(3.0, self.grid.Lx/4)  # Radio máximo para evitar bordes
+            max_radius = min(3.0, self.grid.Lx/4)
             
             positions = []
             for i in range(n_vortex):
-                # Distribución uniforme en círculo
-                r     = np.random.uniform(0.5, max_radius)  # Evitar el centro exacto
+                r     = np.random.uniform(0.5, max_radius)
                 theta = np.random.uniform(0, 2*np.pi)
                 x     = r * np.cos(theta)
                 y     = r * np.sin(theta)
                 positions.append((x, y))
         else:
-            # Usar posiciones proporcionadas
             if len(positions) < n_vortex:
                 raise TypeError("ERROR: LESS positions than vortex")
             elif len(positions) > n_vortex:
@@ -262,13 +281,10 @@ class SSFM:
         psi_with_vortices = psi.copy()
 
         for i, (charge, (x, y)) in enumerate(zip(vortex_charges, positions)):         
-            # Calcular la fase del vórtice en cada punto de la malla
             phase = np.atan2(self.grid.Y - y, self.grid.X - x)
             
-            # Crear la máscara de fase con la carga correcta
             vortex_phase = np.exp(1j * charge * phase)
             
-            # Multiplicar la función de onda por la fase de este vórtice
             psi_with_vortices *= vortex_phase
         return psi_with_vortices
 
@@ -280,26 +296,23 @@ class SSFM:
         dx_psi = ifft2(1j * self.grid.Kx * psi_k)
         dy_psi = ifft2(1j * self.grid.Ky * psi_k)
 
-        kin   = 0.5 * (np.abs(dx_psi)**2 + np.abs(dy_psi)**2)
-        E_kin = np.sum(kin) * self.grid.dx * self.grid.dy
-        V     = self.potential(self.grid.X, self.grid.Y)
-        E_pot = np.sum(V * np.abs(psi)**2) * self.grid.dx * self.grid.dy
-        E_int = (self.g / 2.0) * np.sum(np.abs(psi)**4) * self.grid.dx * self.grid.dy
+        kin    = 0.5 * (np.abs(dx_psi)**2 + np.abs(dy_psi)**2)
+        E_kin  = np.sum(kin) * self.grid.dx * self.grid.dy
 
-        Lz_psi      = -1j * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
-        expectation = np.sum(np.conj(psi) * Lz_psi) * self.grid.dx * self.grid.dy
-        E_rot       = -self.Omega * expectation.real
+        V      = self.potential(self.grid.X, self.grid.Y)
+        E_pot  = np.sum(V * np.abs(psi)**2) * self.grid.dx * self.grid.dy
+
+        E_int  = self.g * 0.5 * np.sum(np.abs(psi)**4) * self.grid.dx * self.grid.dy
+
+        if self.Omega != 0:
+            Lz_psi      = -1j * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
+            expectation = np.sum(np.conj(psi) * Lz_psi) * self.grid.dx * self.grid.dy
+            E_rot       = -self.Omega * expectation.real
+        else: 
+            E_rot = 0
 
         return E_kin + E_pot + E_int + E_rot
-
-    def check_tolnce(self, psi_previus, psi_current, tol):
-        E1 = self.energy(psi_current)
-        E0 = self.energy(psi_previus)
-        if E0 == 0: return False
-        rel_diff = np.abs((E1 - E0) / E0)
-        print(rel_diff)
-        return rel_diff < tol
-
+    
 class Simulation:
     """
     Simulazioa manipulatzeko erabiliko duguna
@@ -311,18 +324,27 @@ class Simulation:
         self.v_charge  = vortex_charge
         self.positions = positions
         self.g         = g
-        self.Omega     = Omega
+        self.Omega     = Omega 
         self.seed      = seed
         self.wf        = WaveFunction(grid, sigma, psi)
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
-    def cooling(self, dt, tol=1E-5, callback=None):
+    def cooling(self, dt, tol=1E-6, callback=None, max_iter=10000):
         def wrapped_callback(t, psi):
             self.wf.psi = psi
             if callback:
                 callback(t, self)
 
-        self.wf.psi = self.ssfm.evolcool(self.wf.psi, dt, n_vortex=self.vortex, vortex_charges=self.v_charge, positions=self.positions, tol=tol, imag=True,callback=wrapped_callback, random_seed=self.seed)
+        self.wf.psi = self.ssfm.evolcool(psi           = self.wf.psi,
+                                        dt             = dt, 
+                                        n_vortex       = self.vortex, 
+                                        vortex_charges = self.v_charge, 
+                                        positions      = self.positions, 
+                                        tol            = tol,
+                                        callback       = wrapped_callback, 
+                                        random_seed    = self.seed,
+                                        max_iter       = max_iter
+                                        )
         self.wf.normalize()
     
     def hydrodynamics(self, t_max, dt, callback=None):
@@ -331,5 +353,8 @@ class Simulation:
             if callback:
                 callback(t, self)
 
-        self.wf.psi = self.ssfm.evol(self.wf.psi, t_max, dt, imag=False, callback=wrapped_callback)
-
+        self.wf.psi = self.ssfm.evol(psi        = self.wf.psi, 
+                                     final_time = t_max, 
+                                     dt         = dt, 
+                                     callback   = wrapped_callback
+                                     )
