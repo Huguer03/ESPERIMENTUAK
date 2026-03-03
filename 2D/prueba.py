@@ -18,16 +18,16 @@ def test():
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(1, 1))
+    potential = TrapPotential(omega=(1, 1.1))
 
     # 3. Crear la simulación
     sim = Simulation(grid=grid, 
                      potential=potential, 
                      g=500.0, 
                      Omega=0.7, 
-                     n_vortex=4, 
+                     n_vortex=0, 
                      vortex_charge=vortex_charges, 
-                     positions=positions
+                     positions=None
                      )
     
     print("Iniciando proceso de cooling (Gradient descent)...")
@@ -35,14 +35,14 @@ def test():
     # 4. Ejecutar el cooling
     # tau_max: tiempo total de evolución imaginaria
     # dt: paso de tiempo (debe ser pequeño para estabilidad)
-    sim.cooling(dt=0.001)
+    sim.cooling(dt=0.001, max_iter=1000000)
 
     initial_density = sim.wf.density().copy()
 
     print("Cooling finalizado.")
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(2.0,dt=0.001)
+    sim.hydrodynamics(10.0,dt=0.001)
 
     # 6. Visualización de resultados
     final_density = sim.wf.density()

@@ -96,31 +96,29 @@ class SSFM:
         self.g         = g
         self.Omega     = Omega
     
-    def rot(self, psi, angle):
-        X, Y = self.grid.X, self.grid.Y
-    
-        cos_a = np.cos(angle)
-        sin_a = np.sin(angle)
-        
-        # Rotación de coordenadas ANTIHORARIA (corregida)
-        X_rot =  X * cos_a - Y * sin_a  # Cambio aquí: -Y * sin_a
-        Y_rot =  X * sin_a + Y * cos_a  # Cambio aquí: +X * sin_a
-        
-        # Convertir a índices para interpolación
-        I = (X_rot + self.grid.Lx/2) / self.grid.dx
-        J = (Y_rot + self.grid.Ly/2) / self.grid.dy
-        
-        # Asegurar que los índices están dentro de los límites
-        I = np.clip(I, 0, self.grid.Nx - 1)
-        J = np.clip(J, 0, self.grid.Ny - 1)
-        
-        coords = np.array([I.ravel(), J.ravel()])
-        
-        # Interpolación
-        psi_real = map_coordinates(psi.real, coords, order=3, mode='wrap').reshape(psi.shape)
-        psi_imag = map_coordinates(psi.imag, coords, order=3, mode='wrap').reshape(psi.shape)
-        psi_rotated = psi_real + 1j * psi_imag
-        return psi_rotated
+    def rot(self, psi, angle, n=2):
+        """
+        Angelu txikietarako biraketa
+        """
+        if angle < 0.01:
+            psi_k  = self.grid.fft(psi)
+            dx_psi = self.grid.ifft(1j * self.grid.Kx * psi_k)
+            dy_psi = self.grid.ifft(1j * self.grid.Ky * psi_k)
+            Lz_psi = -1j * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
+
+            num = psi - 0.5j * angle * Lz_psi
+            
+            psi_rot = num.copy()
+            for i in range(n):
+                psi_rot_k = self.grid.fft(psi_rot)
+                dx_rot    = self.grid.ifft(1j * self.grid.Kx * psi_rot_k)
+                dy_rot    = self.grid.ifft(1j * self.grid.Ky * psi_rot_k)
+                Lz_rot    = -1j * (self.grid.X * dy_rot - self.grid.Y * dx_rot)
+                psi_rot   = num - 0.5j * angle * Lz_rot
+
+            return psi_rot
+        else:
+            raise ValueError(f"Angle to big {angle}, please reduce the angular speed or the time step")
 
     def step(self, psi, dt):
         """
@@ -216,14 +214,14 @@ class SSFM:
             if i % 10 == 0:
                 energy_new = self.energy(psi_current)
                 rel_diff = np.abs((energy_new - energy_old) / (energy_old + 1e-10))
-                print(rel_diff)
                 
                 if rel_diff < tol:
+                    print(i)
                     return psi_current
                     
                 energy_old = energy_new
         
-        raise ValueError("Maximun iterations reached, the whave function does not converge.")
+        raise ValueError(f"Maximun iterations reached, the whave function does not converge. Final energy relative diference: {energy_new}")
 
     
     def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, callback=None, random_seed=None, max_iter=1000000):
