@@ -18,13 +18,13 @@ def test():
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(1, 1.1))
+    potential = TrapPotential(omega=(1, 1.5))
 
     # 3. Crear la simulación
     sim = Simulation(grid=grid, 
                      potential=potential, 
                      g=500.0, 
-                     Omega=0.7, 
+                     Omega=0.6, 
                      n_vortex=0, 
                      vortex_charge=vortex_charges, 
                      positions=None
@@ -37,26 +37,27 @@ def test():
     # dt: paso de tiempo (debe ser pequeño para estabilidad)
     sim.cooling(dt=0.001, max_iter=1000000)
 
-    initial_density = sim.wf.density().copy()
+    
 
     print("Cooling finalizado.")
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(10.0,dt=0.001)
+    sim.hydrodynamics(2.0,dt=0.001)
 
     # 6. Visualización de resultados
     final_density = sim.wf.density()
+    final_phase   = sim.wf.phase()
 
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
     # Gráfico Estado Inicial
-    im0 = ax[0].imshow(initial_density, extent=[-4, 4, -4, 4])
-    ax[0].set_title("Densidad Inicial (Gaussiana)")
+    im0 = ax[0].imshow(final_phase, extent=[-4, 4, -4, 4], cmap='twilight', vmin=-np.pi, vmax=np.pi, origin='lower', interpolation='bilinear')
+    ax[0].set_title("Fase")
     fig.colorbar(im0, ax=ax[0])
 
     # Gráfico Estado Final (tras cooling)
     im1 = ax[1].imshow(final_density, extent=[-4, 4, -4, 4])
-    ax[1].set_title("Estado Rotado")
+    ax[1].set_title("Densidad")
     fig.colorbar(im1, ax=ax[1])
 
     plt.tight_layout()

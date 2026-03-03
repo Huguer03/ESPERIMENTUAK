@@ -71,6 +71,9 @@ class WaveFunction:
         Dentsitatea bueltatzen du |psi|^2
         """
         return np.abs(self.psi)**2 
+    
+    def phase(self):
+        return np.angle(self.psi)
 
 class TrapPotential:
     """
@@ -328,6 +331,7 @@ class Simulation:
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
     def cooling(self, dt, tol=1E-6, callback=None, max_iter=10000):
+        print(self.Omega * dt/2)
         def wrapped_callback(t, psi):
             self.wf.psi = psi
             if callback:
