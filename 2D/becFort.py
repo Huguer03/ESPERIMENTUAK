@@ -155,28 +155,6 @@ class SSFM:
         psi_new = np.exp(-1j * (V + self.g * np.abs(psi4)**2) * dt/2) * psi4
         return psi_new
     
-    def gradient_descent_step(self, psi, dt):
-        """
-        Egingo duguna izango psi_new = psi - factor * grad(E) <-- hau deribatu funtzionala izaten
-        """
-        
-        V = self.potential(self.grid.X, self.grid.Y)
-
-        psi_out = np.asfortranarray(psi.copy()).astype(np.complex128)
-        v = np.asfortranarray(V).astype(np.float64)
-        kx = np.asfortranarray(self.grid.Kx).astype(np.float64)
-        ky = np.asfortranarray(self.grid.Ky).astype(np.float64)
-        k2 = np.asfortranarray(self.grid.K2).astype(np.float64)
-        x = np.asfortranarray(self.grid.X).astype(np.float64)
-        y = np.asfortranarray(self.grid.Y).astype(np.float64)
-
-        gpe_solver.gpe_solver.gradient_descent_step(
-                psi_out, v, kx, ky, k2, x, y,
-                self.grid.Nx, self.grid.Ny,
-                self.grid.dx, self.grid.dy,
-                self.g, self.Omega, dt)
-
-        return psi_out
 
     def evol(self, psi, final_time, dt, callback=None):
         steps       = int(final_time / dt)
@@ -191,32 +169,7 @@ class SSFM:
                     callback(t, psi_current)
 
         return psi_current
-    
-    def gradient_descent_evol(self, psi, dt, tol=1E-6, max_iter=1000000, callback=None):
-        t           = 0.0
-        psi_current = psi.copy()
-        energy_old  = self.energy(psi_current)
-
-        for i in range(max_iter):
-            t          += dt
-            psi_current = self.gradient_descent_step(psi_current, dt)
-
-            if callback:
-                callback(t, psi_current)
-            
-            if i % 10 == 0:
-                energy_new = self.energy(psi_current)
-                rel_diff = np.abs((energy_new - energy_old) / (energy_old + 1e-10))
-                
-                if rel_diff < tol:
-                    print(i)
-                    return psi_current
-                    
-                energy_old = energy_new
-        
-        raise ValueError(f"Maximun iterations reached, the whave function does not converge. Final energy relative diference: {energy_new}")
-
-    
+  
     def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, callback=None, random_seed=None, max_iter=1000000):
         V = self.potential(self.grid.X, self.grid.Y)
         if n_vortex > 0: 
