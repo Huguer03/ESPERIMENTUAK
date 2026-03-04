@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from bec2d import Grid, TrapPotential, Simulation
+from becFort import Grid, TrapPotential, Simulation
 
 def test():
     # 1. Configuración de la malla (Grid)
@@ -18,13 +18,13 @@ def test():
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(1, 1.5))
+    potential = TrapPotential(omega=(1, 1))
 
     # 3. Crear la simulación
     sim = Simulation(grid=grid, 
                      potential=potential, 
                      g=500.0, 
-                     Omega=0.6, 
+                     Omega=0.0, 
                      n_vortex=0, 
                      vortex_charge=vortex_charges, 
                      positions=None
@@ -36,8 +36,6 @@ def test():
     # tau_max: tiempo total de evolución imaginaria
     # dt: paso de tiempo (debe ser pequeño para estabilidad)
     sim.cooling(dt=0.001, max_iter=1000000)
-
-    
 
     print("Cooling finalizado.")
 

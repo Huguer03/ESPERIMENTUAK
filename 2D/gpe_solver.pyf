@@ -1,0 +1,1118 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module gpe_solver ! in 
+    interface  ! in :gpe_solver
+        module gpe_solver ! in :gpe_solver:gpemod.f03
+            use iso_c_binding
+            integer, parameter,optional :: c_fftw_r2r_kind=c_int32_t
+            integer(kind=c_int), parameter,optional :: fftw_r2hc=0
+            integer(kind=c_int), parameter,optional :: fftw_hc2r=1
+            integer(kind=c_int), parameter,optional :: fftw_dht=2
+            integer(kind=c_int), parameter,optional :: fftw_redft00=3
+            integer(kind=c_int), parameter,optional :: fftw_redft01=4
+            integer(kind=c_int), parameter,optional :: fftw_redft10=5
+            integer(kind=c_int), parameter,optional :: fftw_redft11=6
+            integer(kind=c_int), parameter,optional :: fftw_rodft00=7
+            integer(kind=c_int), parameter,optional :: fftw_rodft01=8
+            integer(kind=c_int), parameter,optional :: fftw_rodft10=9
+            integer(kind=c_int), parameter,optional :: fftw_rodft11=10
+            integer(kind=c_int), parameter,optional :: fftw_forward=-1
+            integer(kind=c_int), parameter,optional :: fftw_backward=1
+            integer(kind=c_int), parameter,optional :: fftw_measure=0
+            integer(kind=c_int), parameter,optional :: fftw_destroy_input=1
+            integer(kind=c_int), parameter,optional :: fftw_unaligned=2
+            integer(kind=c_int), parameter,optional :: fftw_conserve_memory=4
+            integer(kind=c_int), parameter,optional :: fftw_exhaustive=8
+            integer(kind=c_int), parameter,optional :: fftw_preserve_input=16
+            integer(kind=c_int), parameter,optional :: fftw_patient=32
+            integer(kind=c_int), parameter,optional :: fftw_estimate=64
+            integer(kind=c_int), parameter,optional :: fftw_wisdom_only=2097152
+            integer(kind=c_int), parameter,optional :: fftw_estimate_patient=128
+            integer(kind=c_int), parameter,optional :: fftw_believe_pcost=256
+            integer(kind=c_int), parameter,optional :: fftw_no_dft_r2hc=512
+            integer(kind=c_int), parameter,optional :: fftw_no_nonthreaded=1024
+            integer(kind=c_int), parameter,optional :: fftw_no_buffering=2048
+            integer(kind=c_int), parameter,optional :: fftw_no_indirect_op=4096
+            integer(kind=c_int), parameter,optional :: fftw_allow_large_generic=8192
+            integer(kind=c_int), parameter,optional :: fftw_no_rank_splits=16384
+            integer(kind=c_int), parameter,optional :: fftw_no_vrank_splits=32768
+            integer(kind=c_int), parameter,optional :: fftw_no_vrecurse=65536
+            integer(kind=c_int), parameter,optional :: fftw_no_simd=131072
+            integer(kind=c_int), parameter,optional :: fftw_no_slow=262144
+            integer(kind=c_int), parameter,optional :: fftw_no_fixed_radix_large_n=524288
+            integer(kind=c_int), parameter,optional :: fftw_allow_pruning=1048576
+            complex(kind=8), parameter,optional :: zi=(0.0d0, 1.0d0)
+            type fftw_iodim ! in :gpe_solver:gpemod.f03:gpe_solver
+                integer(kind=c_int) :: n
+                integer(kind=c_int) :: is
+                integer(kind=c_int) :: os
+            end type fftw_iodim
+            type fftw_iodim64 ! in :gpe_solver:gpemod.f03:gpe_solver
+                integer(kind=c_intptr_t) :: n
+                integer(kind=c_intptr_t) :: is
+                integer(kind=c_intptr_t) :: os
+            end type fftw_iodim64
+            interface  ! in :gpe_solver:gpemod.f03:gpe_solver
+                function fftw_plan_dft(rank_bn,n,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft
+                end function fftw_plan_dft
+                function fftw_plan_dft_1d(n,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_1d
+                end function fftw_plan_dft_1d
+                function fftw_plan_dft_2d(n0,n1,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_2d
+                end function fftw_plan_dft_2d
+                function fftw_plan_dft_3d(n0,n1,n2,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_3d
+                end function fftw_plan_dft_3d
+                function fftw_plan_many_dft(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_many_dft
+                end function fftw_plan_many_dft
+                function fftw_plan_guru_dft(rank_bn,dims,howmany_rank,howmany_dims,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_dft
+                end function fftw_plan_guru_dft
+                function fftw_plan_guru_split_dft(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: ri
+                    real(kind=c_double) dimension(*),intent(out) :: ii
+                    real(kind=c_double) dimension(*),intent(out) :: ro
+                    real(kind=c_double) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_split_dft
+                end function fftw_plan_guru_split_dft
+                function fftw_plan_guru64_dft(rank_bn,dims,howmany_rank,howmany_dims,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_dft
+                end function fftw_plan_guru64_dft
+                function fftw_plan_guru64_split_dft(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: ri
+                    real(kind=c_double) dimension(*),intent(out) :: ii
+                    real(kind=c_double) dimension(*),intent(out) :: ro
+                    real(kind=c_double) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_split_dft
+                end function fftw_plan_guru64_split_dft
+                subroutine fftw_execute_dft(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    complex(kind=c_double_complex) dimension(*),intent(inout) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                end subroutine fftw_execute_dft
+                subroutine fftw_execute_split_dft(p,ri,ii,ro,io) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) dimension(*),intent(inout) :: ri
+                    real(kind=c_double) dimension(*),intent(inout) :: ii
+                    real(kind=c_double) dimension(*),intent(out) :: ro
+                    real(kind=c_double) dimension(*),intent(out) :: io
+                end subroutine fftw_execute_split_dft
+                function fftw_plan_many_dft_r2c(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_many_dft_r2c
+                end function fftw_plan_many_dft_r2c
+                function fftw_plan_dft_r2c(rank_bn,n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_r2c
+                end function fftw_plan_dft_r2c
+                function fftw_plan_dft_r2c_1d(n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_r2c_1d
+                end function fftw_plan_dft_r2c_1d
+                function fftw_plan_dft_r2c_2d(n0,n1,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_r2c_2d
+                end function fftw_plan_dft_r2c_2d
+                function fftw_plan_dft_r2c_3d(n0,n1,n2,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_r2c_3d
+                end function fftw_plan_dft_r2c_3d
+                function fftw_plan_many_dft_c2r(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_many_dft_c2r
+                end function fftw_plan_many_dft_c2r
+                function fftw_plan_dft_c2r(rank_bn,n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_c2r
+                end function fftw_plan_dft_c2r
+                function fftw_plan_dft_c2r_1d(n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_c2r_1d
+                end function fftw_plan_dft_c2r_1d
+                function fftw_plan_dft_c2r_2d(n0,n1,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_c2r_2d
+                end function fftw_plan_dft_c2r_2d
+                function fftw_plan_dft_c2r_3d(n0,n1,n2,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_dft_c2r_3d
+                end function fftw_plan_dft_c2r_3d
+                function fftw_plan_guru_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_dft_r2c
+                end function fftw_plan_guru_dft_r2c
+                function fftw_plan_guru_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_dft_c2r
+                end function fftw_plan_guru_dft_c2r
+                function fftw_plan_guru_split_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: ro
+                    real(kind=c_double) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_split_dft_r2c
+                end function fftw_plan_guru_split_dft_r2c
+                function fftw_plan_guru_split_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: ri
+                    real(kind=c_double) dimension(*),intent(out) :: ii
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_split_dft_c2r
+                end function fftw_plan_guru_split_dft_c2r
+                function fftw_plan_guru64_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_dft_r2c
+                end function fftw_plan_guru64_dft_r2c
+                function fftw_plan_guru64_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_dft_c2r
+                end function fftw_plan_guru64_dft_c2r
+                function fftw_plan_guru64_split_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: ro
+                    real(kind=c_double) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_split_dft_r2c
+                end function fftw_plan_guru64_split_dft_r2c
+                function fftw_plan_guru64_split_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: ri
+                    real(kind=c_double) dimension(*),intent(out) :: ii
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_split_dft_c2r
+                end function fftw_plan_guru64_split_dft_c2r
+                subroutine fftw_execute_dft_r2c(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) dimension(*),intent(inout) :: in
+                    complex(kind=c_double_complex) dimension(*),intent(out) :: out
+                end subroutine fftw_execute_dft_r2c
+                subroutine fftw_execute_dft_c2r(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    complex(kind=c_double_complex) dimension(*),intent(inout) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                end subroutine fftw_execute_dft_c2r
+                subroutine fftw_execute_split_dft_r2c(p,in,ro,io) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) dimension(*),intent(inout) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: ro
+                    real(kind=c_double) dimension(*),intent(out) :: io
+                end subroutine fftw_execute_split_dft_r2c
+                subroutine fftw_execute_split_dft_c2r(p,ri,ii,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) dimension(*),intent(inout) :: ri
+                    real(kind=c_double) dimension(*),intent(inout) :: ii
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                end subroutine fftw_execute_split_dft_c2r
+                function fftw_plan_many_r2r(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_many_r2r
+                end function fftw_plan_many_r2r
+                function fftw_plan_r2r(rank_bn,n,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_r2r
+                end function fftw_plan_r2r
+                function fftw_plan_r2r_1d(n,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind), value :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_r2r_1d
+                end function fftw_plan_r2r_1d
+                function fftw_plan_r2r_2d(n0,n1,in,out,kind0,kind1,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind), value :: kind0
+                    integer(kind=c_fftw_r2r_kind), value :: kind1
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_r2r_2d
+                end function fftw_plan_r2r_2d
+                function fftw_plan_r2r_3d(n0,n1,n2,in,out,kind0,kind1,kind2,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind), value :: kind0
+                    integer(kind=c_fftw_r2r_kind), value :: kind1
+                    integer(kind=c_fftw_r2r_kind), value :: kind2
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_r2r_3d
+                end function fftw_plan_r2r_3d
+                function fftw_plan_guru_r2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru_r2r
+                end function fftw_plan_guru_r2r
+                function fftw_plan_guru64_r2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftw_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftw_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_double) dimension(*),intent(out) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftw_plan_guru64_r2r
+                end function fftw_plan_guru64_r2r
+                subroutine fftw_execute_r2r(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) dimension(*),intent(inout) :: in
+                    real(kind=c_double) dimension(*),intent(out) :: out
+                end subroutine fftw_execute_r2r
+                subroutine fftw_destroy_plan(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                end subroutine fftw_destroy_plan
+                subroutine fftw_forget_wisdom ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftw_forget_wisdom
+                subroutine fftw_cleanup ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftw_cleanup
+                subroutine fftw_set_timelimit(t) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    real(kind=c_double), value :: t
+                end subroutine fftw_set_timelimit
+                subroutine fftw_plan_with_nthreads(nthreads) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: nthreads
+                end subroutine fftw_plan_with_nthreads
+                function fftw_planner_nthreads() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int) :: fftw_planner_nthreads
+                end function fftw_planner_nthreads
+                function fftw_init_threads() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int) :: fftw_init_threads
+                end function fftw_init_threads
+                subroutine fftw_cleanup_threads ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftw_cleanup_threads
+                subroutine fftw_make_planner_thread_safe ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftw_make_planner_thread_safe
+                function fftw_export_wisdom_to_filename(filename) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    character(len=c_char) dimension(*),intent(in) :: filename
+                    integer(kind=c_int) :: fftw_export_wisdom_to_filename
+                end function fftw_export_wisdom_to_filename
+                subroutine fftw_export_wisdom_to_file(output_file) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: output_file
+                end subroutine fftw_export_wisdom_to_file
+                function fftw_export_wisdom_to_string() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr) :: fftw_export_wisdom_to_string
+                end function fftw_export_wisdom_to_string
+                subroutine fftw_export_wisdom(write_char,data) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_funptr), value :: write_char
+                    type(c_ptr), value :: data
+                end subroutine fftw_export_wisdom
+                function fftw_import_system_wisdom() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int) :: fftw_import_system_wisdom
+                end function fftw_import_system_wisdom
+                function fftw_import_wisdom_from_filename(filename) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    character(len=c_char) dimension(*),intent(in) :: filename
+                    integer(kind=c_int) :: fftw_import_wisdom_from_filename
+                end function fftw_import_wisdom_from_filename
+                function fftw_import_wisdom_from_file(input_file) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: input_file
+                    integer(kind=c_int) :: fftw_import_wisdom_from_file
+                end function fftw_import_wisdom_from_file
+                function fftw_import_wisdom_from_string(input_string) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    character(len=c_char) dimension(*),intent(in) :: input_string
+                    integer(kind=c_int) :: fftw_import_wisdom_from_string
+                end function fftw_import_wisdom_from_string
+                function fftw_import_wisdom(read_char,data) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_funptr), value :: read_char
+                    type(c_ptr), value :: data
+                    integer(kind=c_int) :: fftw_import_wisdom
+                end function fftw_import_wisdom
+                subroutine fftw_fprint_plan(p,output_file) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    type(c_ptr), value :: output_file
+                end subroutine fftw_fprint_plan
+                subroutine fftw_print_plan(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                end subroutine fftw_print_plan
+                function fftw_sprint_plan(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    type(c_ptr) :: fftw_sprint_plan
+                end function fftw_sprint_plan
+                function fftw_malloc(n) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_size_t), value :: n
+                    type(c_ptr) :: fftw_malloc
+                end function fftw_malloc
+                function fftw_alloc_real(n) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_size_t), value :: n
+                    type(c_ptr) :: fftw_alloc_real
+                end function fftw_alloc_real
+                function fftw_alloc_complex(n) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_size_t), value :: n
+                    type(c_ptr) :: fftw_alloc_complex
+                end function fftw_alloc_complex
+                subroutine fftw_free(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                end subroutine fftw_free
+                subroutine fftw_flops(p,add,mul,fmas) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) intent(out) :: add
+                    real(kind=c_double) intent(out) :: mul
+                    real(kind=c_double) intent(out) :: fmas
+                end subroutine fftw_flops
+                function fftw_estimate_cost(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) :: fftw_estimate_cost
+                end function fftw_estimate_cost
+                function fftw_cost(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) :: fftw_cost
+                end function fftw_cost
+                function fftw_alignment_of(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    real(kind=c_double) dimension(*),intent(out) :: p
+                    integer(kind=c_int) :: fftw_alignment_of
+                end function fftw_alignment_of
+            end interface 
+            type fftwf_iodim ! in :gpe_solver:gpemod.f03:gpe_solver
+                integer(kind=c_int) :: n
+                integer(kind=c_int) :: is
+                integer(kind=c_int) :: os
+            end type fftwf_iodim
+            type fftwf_iodim64 ! in :gpe_solver:gpemod.f03:gpe_solver
+                integer(kind=c_intptr_t) :: n
+                integer(kind=c_intptr_t) :: is
+                integer(kind=c_intptr_t) :: os
+            end type fftwf_iodim64
+            interface  ! in :gpe_solver:gpemod.f03:gpe_solver
+                function fftwf_plan_dft(rank_bn,n,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft
+                end function fftwf_plan_dft
+                function fftwf_plan_dft_1d(n,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_1d
+                end function fftwf_plan_dft_1d
+                function fftwf_plan_dft_2d(n0,n1,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_2d
+                end function fftwf_plan_dft_2d
+                function fftwf_plan_dft_3d(n0,n1,n2,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_3d
+                end function fftwf_plan_dft_3d
+                function fftwf_plan_many_dft(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_many_dft
+                end function fftwf_plan_many_dft
+                function fftwf_plan_guru_dft(rank_bn,dims,howmany_rank,howmany_dims,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_dft
+                end function fftwf_plan_guru_dft
+                function fftwf_plan_guru_split_dft(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: ri
+                    real(kind=c_float) dimension(*),intent(out) :: ii
+                    real(kind=c_float) dimension(*),intent(out) :: ro
+                    real(kind=c_float) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_split_dft
+                end function fftwf_plan_guru_split_dft
+                function fftwf_plan_guru64_dft(rank_bn,dims,howmany_rank,howmany_dims,in,out,sign,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: sign
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_dft
+                end function fftwf_plan_guru64_dft
+                function fftwf_plan_guru64_split_dft(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: ri
+                    real(kind=c_float) dimension(*),intent(out) :: ii
+                    real(kind=c_float) dimension(*),intent(out) :: ro
+                    real(kind=c_float) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_split_dft
+                end function fftwf_plan_guru64_split_dft
+                subroutine fftwf_execute_dft(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    complex(kind=c_float_complex) dimension(*),intent(inout) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                end subroutine fftwf_execute_dft
+                subroutine fftwf_execute_split_dft(p,ri,ii,ro,io) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_float) dimension(*),intent(inout) :: ri
+                    real(kind=c_float) dimension(*),intent(inout) :: ii
+                    real(kind=c_float) dimension(*),intent(out) :: ro
+                    real(kind=c_float) dimension(*),intent(out) :: io
+                end subroutine fftwf_execute_split_dft
+                function fftwf_plan_many_dft_r2c(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_many_dft_r2c
+                end function fftwf_plan_many_dft_r2c
+                function fftwf_plan_dft_r2c(rank_bn,n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_r2c
+                end function fftwf_plan_dft_r2c
+                function fftwf_plan_dft_r2c_1d(n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_r2c_1d
+                end function fftwf_plan_dft_r2c_1d
+                function fftwf_plan_dft_r2c_2d(n0,n1,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_r2c_2d
+                end function fftwf_plan_dft_r2c_2d
+                function fftwf_plan_dft_r2c_3d(n0,n1,n2,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_r2c_3d
+                end function fftwf_plan_dft_r2c_3d
+                function fftwf_plan_many_dft_c2r(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_many_dft_c2r
+                end function fftwf_plan_many_dft_c2r
+                function fftwf_plan_dft_c2r(rank_bn,n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_c2r
+                end function fftwf_plan_dft_c2r
+                function fftwf_plan_dft_c2r_1d(n,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_c2r_1d
+                end function fftwf_plan_dft_c2r_1d
+                function fftwf_plan_dft_c2r_2d(n0,n1,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_c2r_2d
+                end function fftwf_plan_dft_c2r_2d
+                function fftwf_plan_dft_c2r_3d(n0,n1,n2,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_dft_c2r_3d
+                end function fftwf_plan_dft_c2r_3d
+                function fftwf_plan_guru_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_dft_r2c
+                end function fftwf_plan_guru_dft_r2c
+                function fftwf_plan_guru_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_dft_c2r
+                end function fftwf_plan_guru_dft_c2r
+                function fftwf_plan_guru_split_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: ro
+                    real(kind=c_float) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_split_dft_r2c
+                end function fftwf_plan_guru_split_dft_r2c
+                function fftwf_plan_guru_split_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: ri
+                    real(kind=c_float) dimension(*),intent(out) :: ii
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_split_dft_c2r
+                end function fftwf_plan_guru_split_dft_c2r
+                function fftwf_plan_guru64_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_dft_r2c
+                end function fftwf_plan_guru64_dft_r2c
+                function fftwf_plan_guru64_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_dft_c2r
+                end function fftwf_plan_guru64_dft_c2r
+                function fftwf_plan_guru64_split_dft_r2c(rank_bn,dims,howmany_rank,howmany_dims,in,ro,io,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: ro
+                    real(kind=c_float) dimension(*),intent(out) :: io
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_split_dft_r2c
+                end function fftwf_plan_guru64_split_dft_r2c
+                function fftwf_plan_guru64_split_dft_c2r(rank_bn,dims,howmany_rank,howmany_dims,ri,ii,out,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: ri
+                    real(kind=c_float) dimension(*),intent(out) :: ii
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_split_dft_c2r
+                end function fftwf_plan_guru64_split_dft_c2r
+                subroutine fftwf_execute_dft_r2c(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_float) dimension(*),intent(inout) :: in
+                    complex(kind=c_float_complex) dimension(*),intent(out) :: out
+                end subroutine fftwf_execute_dft_r2c
+                subroutine fftwf_execute_dft_c2r(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    complex(kind=c_float_complex) dimension(*),intent(inout) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                end subroutine fftwf_execute_dft_c2r
+                subroutine fftwf_execute_split_dft_r2c(p,in,ro,io) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_float) dimension(*),intent(inout) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: ro
+                    real(kind=c_float) dimension(*),intent(out) :: io
+                end subroutine fftwf_execute_split_dft_r2c
+                subroutine fftwf_execute_split_dft_c2r(p,ri,ii,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_float) dimension(*),intent(inout) :: ri
+                    real(kind=c_float) dimension(*),intent(inout) :: ii
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                end subroutine fftwf_execute_split_dft_c2r
+                function fftwf_plan_many_r2r(rank_bn,n,howmany,in,inembed,istride,idist,out,onembed,ostride,odist,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    integer(kind=c_int), value :: howmany
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    integer(kind=c_int) dimension(*),intent(in) :: inembed
+                    integer(kind=c_int), value :: istride
+                    integer(kind=c_int), value :: idist
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_int) dimension(*),intent(in) :: onembed
+                    integer(kind=c_int), value :: ostride
+                    integer(kind=c_int), value :: odist
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_many_r2r
+                end function fftwf_plan_many_r2r
+                function fftwf_plan_r2r(rank_bn,n,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    integer(kind=c_int) dimension(*),intent(in) :: n
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_r2r
+                end function fftwf_plan_r2r
+                function fftwf_plan_r2r_1d(n,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind), value :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_r2r_1d
+                end function fftwf_plan_r2r_1d
+                function fftwf_plan_r2r_2d(n0,n1,in,out,kind0,kind1,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind), value :: kind0
+                    integer(kind=c_fftw_r2r_kind), value :: kind1
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_r2r_2d
+                end function fftwf_plan_r2r_2d
+                function fftwf_plan_r2r_3d(n0,n1,n2,in,out,kind0,kind1,kind2,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: n0
+                    integer(kind=c_int), value :: n1
+                    integer(kind=c_int), value :: n2
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind), value :: kind0
+                    integer(kind=c_fftw_r2r_kind), value :: kind1
+                    integer(kind=c_fftw_r2r_kind), value :: kind2
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_r2r_3d
+                end function fftwf_plan_r2r_3d
+                function fftwf_plan_guru_r2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru_r2r
+                end function fftwf_plan_guru_r2r
+                function fftwf_plan_guru64_r2r(rank_bn,dims,howmany_rank,howmany_dims,in,out,kind,flags) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: rank_bn
+                    type(fftwf_iodim64) dimension(*),intent(in) :: dims
+                    integer(kind=c_int), value :: howmany_rank
+                    type(fftwf_iodim64) dimension(*),intent(in) :: howmany_dims
+                    real(kind=c_float) dimension(*),intent(out) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                    integer(kind=c_fftw_r2r_kind) dimension(*),intent(in) :: kind
+                    integer(kind=c_int), value :: flags
+                    type(c_ptr) :: fftwf_plan_guru64_r2r
+                end function fftwf_plan_guru64_r2r
+                subroutine fftwf_execute_r2r(p,in,out) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_float) dimension(*),intent(inout) :: in
+                    real(kind=c_float) dimension(*),intent(out) :: out
+                end subroutine fftwf_execute_r2r
+                subroutine fftwf_destroy_plan(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                end subroutine fftwf_destroy_plan
+                subroutine fftwf_forget_wisdom ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftwf_forget_wisdom
+                subroutine fftwf_cleanup ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftwf_cleanup
+                subroutine fftwf_set_timelimit(t) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    real(kind=c_double), value :: t
+                end subroutine fftwf_set_timelimit
+                subroutine fftwf_plan_with_nthreads(nthreads) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int), value :: nthreads
+                end subroutine fftwf_plan_with_nthreads
+                function fftwf_planner_nthreads() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int) :: fftwf_planner_nthreads
+                end function fftwf_planner_nthreads
+                function fftwf_init_threads() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int) :: fftwf_init_threads
+                end function fftwf_init_threads
+                subroutine fftwf_cleanup_threads ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftwf_cleanup_threads
+                subroutine fftwf_make_planner_thread_safe ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                end subroutine fftwf_make_planner_thread_safe
+                function fftwf_export_wisdom_to_filename(filename) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    character(len=c_char) dimension(*),intent(in) :: filename
+                    integer(kind=c_int) :: fftwf_export_wisdom_to_filename
+                end function fftwf_export_wisdom_to_filename
+                subroutine fftwf_export_wisdom_to_file(output_file) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: output_file
+                end subroutine fftwf_export_wisdom_to_file
+                function fftwf_export_wisdom_to_string() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr) :: fftwf_export_wisdom_to_string
+                end function fftwf_export_wisdom_to_string
+                subroutine fftwf_export_wisdom(write_char,data) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_funptr), value :: write_char
+                    type(c_ptr), value :: data
+                end subroutine fftwf_export_wisdom
+                function fftwf_import_system_wisdom() ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_int) :: fftwf_import_system_wisdom
+                end function fftwf_import_system_wisdom
+                function fftwf_import_wisdom_from_filename(filename) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    character(len=c_char) dimension(*),intent(in) :: filename
+                    integer(kind=c_int) :: fftwf_import_wisdom_from_filename
+                end function fftwf_import_wisdom_from_filename
+                function fftwf_import_wisdom_from_file(input_file) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: input_file
+                    integer(kind=c_int) :: fftwf_import_wisdom_from_file
+                end function fftwf_import_wisdom_from_file
+                function fftwf_import_wisdom_from_string(input_string) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    character(len=c_char) dimension(*),intent(in) :: input_string
+                    integer(kind=c_int) :: fftwf_import_wisdom_from_string
+                end function fftwf_import_wisdom_from_string
+                function fftwf_import_wisdom(read_char,data) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_funptr), value :: read_char
+                    type(c_ptr), value :: data
+                    integer(kind=c_int) :: fftwf_import_wisdom
+                end function fftwf_import_wisdom
+                subroutine fftwf_fprint_plan(p,output_file) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    type(c_ptr), value :: output_file
+                end subroutine fftwf_fprint_plan
+                subroutine fftwf_print_plan(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                end subroutine fftwf_print_plan
+                function fftwf_sprint_plan(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    type(c_ptr) :: fftwf_sprint_plan
+                end function fftwf_sprint_plan
+                function fftwf_malloc(n) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_size_t), value :: n
+                    type(c_ptr) :: fftwf_malloc
+                end function fftwf_malloc
+                function fftwf_alloc_real(n) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_size_t), value :: n
+                    type(c_ptr) :: fftwf_alloc_real
+                end function fftwf_alloc_real
+                function fftwf_alloc_complex(n) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    integer(kind=c_size_t), value :: n
+                    type(c_ptr) :: fftwf_alloc_complex
+                end function fftwf_alloc_complex
+                subroutine fftwf_free(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                end subroutine fftwf_free
+                subroutine fftwf_flops(p,add,mul,fmas) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) intent(out) :: add
+                    real(kind=c_double) intent(out) :: mul
+                    real(kind=c_double) intent(out) :: fmas
+                end subroutine fftwf_flops
+                function fftwf_estimate_cost(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) :: fftwf_estimate_cost
+                end function fftwf_estimate_cost
+                function fftwf_cost(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    type(c_ptr), value :: p
+                    real(kind=c_double) :: fftwf_cost
+                end function fftwf_cost
+                function fftwf_alignment_of(p) ! in :gpe_solver:gpemod.f03:gpe_solver:unknown_interface
+                    real(kind=c_float) dimension(*),intent(out) :: p
+                    integer(kind=c_int) :: fftwf_alignment_of
+                end function fftwf_alignment_of
+            end interface 
+            subroutine fft2(psi,nx,ny,direction) ! in :gpe_solver:gpemod.f03:gpe_solver
+                complex(kind=8) dimension(nx,ny),intent(inout) :: psi
+                integer, optional,intent(in),check(shape(psi, 0) == nx),depend(psi) :: nx=shape(psi, 0)
+                integer, optional,intent(in),check(shape(psi, 1) == ny),depend(psi) :: ny=shape(psi, 1)
+                integer intent(in) :: direction
+            end subroutine fft2
+            subroutine gradient_descent_step(psi,v,kx,ky,k2,x,y,nx,ny,dx,dy,g,omega,dt) ! in :gpe_solver:gpemod.f03:gpe_solver
+                complex(kind=8) dimension(nx,ny),intent(inout) :: psi
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: v
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: kx
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: ky
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: k2
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: x
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: y
+                integer, optional,intent(in),check(shape(psi, 0) == nx),depend(psi) :: nx=shape(psi, 0)
+                integer, optional,intent(in),check(shape(psi, 1) == ny),depend(psi) :: ny=shape(psi, 1)
+                real(kind=8) intent(in) :: dx
+                real(kind=8) intent(in) :: dy
+                real(kind=8) intent(in) :: g
+                real(kind=8) intent(in) :: omega
+                real(kind=8) intent(in) :: dt
+            end subroutine gradient_descent_step
+            function energy(psi,v,kx,ky,x,y,nx,ny,dx,dy,g,omega) result (e) ! in :gpe_solver:gpemod.f03:gpe_solver
+                complex(kind=8) dimension(nx,ny),intent(in) :: psi
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: v
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: kx
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: ky
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: x
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: y
+                integer, optional,intent(in),check(shape(psi, 0) == nx),depend(psi) :: nx=shape(psi, 0)
+                integer, optional,intent(in),check(shape(psi, 1) == ny),depend(psi) :: ny=shape(psi, 1)
+                real(kind=8) intent(in) :: dx
+                real(kind=8) intent(in) :: dy
+                real(kind=8) intent(in) :: g
+                real(kind=8) intent(in) :: omega
+                real(kind=8) :: e
+            end function energy
+            subroutine gradient_descent_evol(psi,v,kx,ky,k2,x,y,nx,ny,dx,dy,g,omega,dt,max_iter,tol,converge) ! in :gpe_solver:gpemod.f03:gpe_solver
+                complex(kind=8) dimension(nx,ny),intent(inout) :: psi
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: v
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: kx
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: ky
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: k2
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: x
+                real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: y
+                integer, optional,intent(in),check(shape(psi, 0) == nx),depend(psi) :: nx=shape(psi, 0)
+                integer, optional,intent(in),check(shape(psi, 1) == ny),depend(psi) :: ny=shape(psi, 1)
+                real(kind=8) intent(in) :: dx
+                real(kind=8) intent(in) :: dy
+                real(kind=8) intent(in) :: g
+                real(kind=8) intent(in) :: omega
+                real(kind=8) intent(in) :: dt
+                integer, value,optional :: max_iter
+                real(kind=8), value,optional :: tol
+                logical intent(out) :: converge
+            end subroutine gradient_descent_evol
+        end module gpe_solver
+    end interface 
+end python module gpe_solver
+
+! This file was auto-generated with f2py (version:2.4.2).
+! See:
+! https://web.archive.org/web/20140822061353/http://cens.ioc.ee/projects/f2py2e

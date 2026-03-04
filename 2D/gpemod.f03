@@ -1,6 +1,10 @@
+! para compilar: python -m numpy.f2py -c gpemod.f03 -m gpe_solver -L$CONDA_PREFIX/lib -lfftw3 --f90flags="-I$CONDA_PREFIX/include"
+
 module gpe_solver
-    
+    use iso_c_binding
     implicit none
+
+    include 'fftw3.f03'
 
     complex(8), parameter :: zi = (0.0d0, 1.0d0)
 
@@ -11,35 +15,26 @@ contains
         integer, intent(in) :: nx, ny
         integer, intent(in) :: direction
         
-        real(8) :: work(2*nx*ny + 2*nx + 2*ny + 30)
-        real(8) :: rwork(2*nx*ny)
-        integer :: i, j, k
-        
-        do j = 1, ny
-            do i = 1, nx
-                k = 2*((j-1)*nx + i-1) + 1
-                rwork(k)   = real(psi(i, j))
-                rwork(k+1) = aimag(psi(i, j))
-            end do
-        end do
+        type(C_PTR) :: plan
+        integer :: fftw_dir
         
         if (direction == 1) then
-            call zfft2f(0, nx, ny, rwork, nx, work, 2*nx*ny, work(2*nx*ny+1), 2*(nx+ny))
+            fftw_dir = FFTW_FORWARD
         else
-            call zfft2b(0, nx, ny, rwork, nx, work, 2*nx*ny, work(2*nx*ny+1), 2*(nx+ny))
-            rwork = rwork / (nx * ny)
+            fftw_dir = FFTW_BACKWARD
         end if
-        
-        do j = 1, ny
-            do i = 1, nx
-                k = 2*((j-1)*nx + i-1) + 1
-                psi(i, j) = cmplx(rwork(k), rwork(k+1), kind=8)
-            end do
-        end do
+
+        plan = fftw_plan_dft_2d(nx, ny, psi, psi, fftw_dir, FFTW_ESTIMATE)
+        call fftw_execute_dft(plan, psi, psi)
+        call fftw_destroy_plan(plan)
+
+        if (direction /= 1) then
+            psi = psi / real(nx * ny, 8)
+        end if
         
     end subroutine fft2
 
-        subroutine gradient_descent_step(psi, v, kx, ky, k2, x, y, nx, ny, dx, dy, &
+    subroutine gradient_descent_step(psi, v, kx, ky, k2, x, y, nx, ny, dx, dy, &
                                     g, omega, dt)
         complex(8), intent(inout) :: psi(nx, ny)
         real(8), intent(in) :: v(nx, ny), kx(nx, ny), ky(nx, ny), k2(nx, ny)
@@ -59,17 +54,15 @@ contains
         temp = -k2 * psi_k
         call fft2(temp, nx, ny, -1)
 
+        grad = -0.5d0 * temp + v * psi + g * abs(psi)**2 * psi
+
         if (omega /= 0.0d0) then
             dx_psi = zi * kx * psi_k
             dy_psi = zi * ky * psi_k
 
             call fft2(dx_psi, nx, ny, -1)
             call fft2(dy_psi, nx, ny, -1)
-        end if
 
-        grad = -0.5d0 * temp + v * psi + g * abs(psi)**2 * psi
-
-        if (omega /= 0.0d0) then
             grad = grad - zi * (x * dy_psi - y * dx_psi)
         end if
 
@@ -79,18 +72,19 @@ contains
         psi = psi / sqrt(norm)
     end subroutine gradient_descent_step
 
-    function energy(psi, v, kx, ky, k2, x, y, nx, ny, dx, dy,&
+    function energy(psi, v, kx, ky, x, y, nx, ny, dx, dy,&
                                      g, omega) result(E)
         complex(8), intent(in) :: psi(nx, ny)
-        real(8), intent(in) :: v(nx, ny), kx(nx, ny), ky(nx, ny), k2(nx, ny)
+        real(8), intent(in) :: v(nx, ny), kx(nx, ny), ky(nx, ny)
         real(8), intent(in) :: x(nx, ny), y(nx, ny)
         integer, intent(in) :: nx, ny
         real(8), intent(in) :: dx, dy, g, omega
         
         complex(8) :: psi_k(nx, ny)
         complex(8) :: dx_psi(nx, ny), dy_psi(nx, ny)
-        complex(8) :: temp_c(nx, ny)
-        real(8) :: temp_r(nx,ny)
+        complex(8) :: Lz_psi(nx,ny)
+        complex(8) :: expextation
+        real(8) :: laplacian(nx,ny)
         real(8) :: E_kin, E_pot, E_g, E_rot, E
 
         psi_k = psi
@@ -101,14 +95,62 @@ contains
         call fft2(dx_psi, nx, ny, -1)
         call fft2(dy_psi, nx, ny, -1)
 
-        temp_r = (abs(dx_psi)**2 + abs(dy_psi)**2)
-        E_kin  = 0.5d0 * sum(temp_r) * dx * dy
+        laplacian = (abs(dx_psi)**2 + abs(dy_psi)**2)
+        E_kin     = 0.5d0 * sum(laplacian) * dx * dy
 
-        E_pot = sum(psi2 * v) * dx * dy
+        E_pot = sum(abs(psi)**2 * v) * dx * dy
 
+        E_g = 0.5d0 * g * sum(abs(psi)**4) * dx * dy
 
+        E = E_kin + E_pot + E_g
 
+        if (omega /= 0.0d0) then
+            Lz_psi = -zi * (x * dy_psi - y * dx_psi)
+            expextation = sum(conjg(psi) * Lz_psi) * dx * dy
+            E_rot       = -omega * real(expextation)
+        else 
+            E_rot = 0.0d0
+        end if
 
+        E = E + E_rot
     end function energy
+
+    subroutine gradient_descent_evol(psi, v, kx, ky, k2, x, y, nx, ny, dx, dy, &
+                                    g, omega, dt, max_iter, tol, converge)
+        complex(8), intent(inout) :: psi(nx, ny)
+        real(8), intent(in)  :: v(nx, ny), kx(nx, ny), ky(nx, ny), k2(nx, ny)
+        real(8), intent(in)  :: x(nx, ny), y(nx, ny)
+        integer, intent(in)  :: nx, ny
+        real(8), intent(in)  :: dx, dy, g, omega, dt
+        logical, intent(out) :: converge
+        integer, optional    :: max_iter
+        real(8), optional    :: tol
+
+        real(8)    :: E_rel, E_new, E_old
+        integer    :: i
+
+        if (.not. present(max_iter)) max_iter = 100000
+        if (.not. present(tol)) tol = 1e-6
+
+        E_old = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, g, omega)
+
+        do i = 1, max_iter
+            call gradient_descent_step(psi, v, kx, ky, k2, x, y, nx, ny,&
+                                         dx, dy, g, omega, dt)
+            if ( modulo(i,10) == 0 ) then
+                E_new = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, g, omega)
+                E_rel = abs(E_new - E_old) / E_old
+                if ( E_rel < tol ) then
+                    print*, "Iterations needed for convergence: ", i
+                    converge = .true.
+                    return
+                end if
+            end if
+        end do
+
+        if ( i == max_iter ) then
+            converge = .false.
+        end if
+    end subroutine gradient_descent_evol 
     
 end module gpe_solver

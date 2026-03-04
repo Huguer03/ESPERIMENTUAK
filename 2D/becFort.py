@@ -1,7 +1,7 @@
 import numpy as np 
 from scipy.fft import fft2, ifft2, fftfreq 
 from scipy.ndimage import map_coordinates
-import gpemod
+import gpe_solver
 
 class Grid:
     """
@@ -170,7 +170,7 @@ class SSFM:
         x = np.asfortranarray(self.grid.X).astype(np.float64)
         y = np.asfortranarray(self.grid.Y).astype(np.float64)
 
-        gpemod.gpe_solver.gradient_descent_step(
+        gpe_solver.gpe_solver.gradient_descent_step(
                 psi_out, v, kx, ky, k2, x, y,
                 self.grid.Nx, self.grid.Ny,
                 self.grid.dx, self.grid.dy,
@@ -218,24 +218,46 @@ class SSFM:
 
     
     def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, callback=None, random_seed=None, max_iter=1000000):
-        psi_current = psi.copy()
-
+        V = self.potential(self.grid.X, self.grid.Y)
         if n_vortex > 0: 
-            psi_current = self.vortex_phase_mask(psi            = psi_current, 
-                                                 n_vortex       = n_vortex, 
-                                                 vortex_charges = vortex_charges, 
-                                                 positions      = positions, 
-                                                 random_seed    = random_seed
-                                                 )
+            psi = self.vortex_phase_mask(psi           = psi, 
+                                        n_vortex       = n_vortex, 
+                                        vortex_charges = vortex_charges, 
+                                        positions      = positions, 
+                                        random_seed    = random_seed
+                                        )
             
-        psi = self.gradient_descent_evol(psi      = psi_current, 
-                                         dt       = dt,
-                                         tol      = tol,
-                                         max_iter = max_iter, 
-                                         callback = callback
-                                         )
+        psi_out = np.asfortranarray(psi.copy()).astype(np.complex128)
+        v       = np.asfortranarray(V).astype(np.float64)
+        kx      = np.asfortranarray(self.grid.Kx).astype(np.float64)
+        ky      = np.asfortranarray(self.grid.Ky).astype(np.float64)
+        k2      = np.asfortranarray(self.grid.K2).astype(np.float64)
+        x       = np.asfortranarray(self.grid.X).astype(np.float64)
+        y       = np.asfortranarray(self.grid.Y).astype(np.float64)
 
-        return psi
+        converge = gpe_solver.gpe_solver.gradient_descent_evol(
+                                            psi      = psi_out,
+                                            v        = v,
+                                            kx       = kx,
+                                            ky       = ky,
+                                            k2       = k2,
+                                            x        = x,
+                                            y        = y,
+                                            nx       = self.grid.Nx,
+                                            ny       = self.grid.Ny,
+                                            dx       = self.grid.dx,
+                                            dy       = self.grid.dy,
+                                            g        = self.g,
+                                            omega    = self.Omega,
+                                            dt       = dt,
+                                            max_iter = max_iter,
+                                            tol      = tol
+                                        )
+
+        if converge == True:
+            return psi_out
+        else:
+            raise ValueError("Maximun iterations reached, the whave function does not converge. Final energy relative diference.")
     
     def vortex_phase_mask(self, psi, n_vortex, vortex_charges, positions, random_seed):
         if n_vortex == 0:
