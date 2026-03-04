@@ -74,7 +74,8 @@ class WaveFunction:
         return np.abs(self.psi)**2 
     
     def phase(self):
-        return np.angle(self.psi)
+        phase = np.angle(self.psi)
+        return phase
 
 class TrapPotential:
     """
