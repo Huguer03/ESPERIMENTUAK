@@ -164,5 +164,87 @@ contains
 
         call destroy_fft_plans()
     end subroutine gradient_descent_evol 
+
+    subroutine rot(psi, angle, kx, ky, x, y, nx, ny, iterations)
+        complex(8), intent(inout) :: psi(nx,ny)
+        real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
+        real(8), intent(in)       :: x(nx,ny), y(nx,ny)
+        real(8), intent(in)       :: angle
+        integer, intent(in)       :: nx, ny, iterations
+
+        complex(8) :: psi_k(nx,ny), Lz_psi(nx,ny)
+        complex(8) :: dx_psi(nx,ny), dy_psi(nx,ny)
+        real(8)    :: step
+        integer    :: i
+
+        step  = 1.0d0 / real(iterations, 8)
+        psi_k = psi
+
+        do i = 1, iterations
+            call fft2(psi_k, nx, ny, 1)
+
+            dx_psi = zi * kx * psi_k
+            dy_psi = zi * ky * psi_k
+            call fft2(dx_psi, nx, ny, -1)
+            call fft2(dy_psi, nx, ny, -1)
+
+            Lz_psi = -zi * (x * dy_psi - y * dx_psi)
+            psi    = psi - zi * step * angle * Lz_psi
+            psi_k  = psi
+        end do
+    end subroutine rot
+
+    subroutine SSFM_step(psi, v, kx, ky, k2, x, y, nx, ny, &
+                                    g, omega, dt, iterations)
+        complex(8), intent(inout) :: psi(nx,ny)
+        real(8), intent(in)       :: v(nx,ny)
+        real(8), intent(in)       :: x(nx,ny), y(nx,ny)
+        real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
+        real(8), intent(in)       :: k2(nx,ny)
+        real(8), intent(in)       :: dt, g, omega
+        integer, intent(in)       :: nx, ny, iterations
+
+        real(8)    :: angle
+
+        angle = omega * dt / 2.0d0
+        psi   = exp(zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
+
+        if (omega /= 0.0d0) then
+            call rot(psi, angle, kx, ky, x, y, nx, ny, iterations)
+        end if
+
+        call fft2(psi, nx, ny, 1)
+        psi = exp(-0.5 * zi * k2 * dt) * psi
+        call fft2(psi, nx, ny, -1)
+
+        if (omega /= 0.0d0) then
+            call rot(psi, angle, kx, ky, x, y, nx, ny, iterations)
+        end if
+
+        psi   = exp(zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
+    end subroutine SSFM_step
+
+    subroutine SSMF_evol(psi, v, kx, ky, k2, x, y, nx, ny, &
+                                    g, omega, final_time, dt, iterations)
+        complex(8), intent(inout) :: psi(nx,ny)
+        real(8), intent(in)       :: v(nx,ny)
+        real(8), intent(in)       :: x(nx,ny), y(nx,ny)
+        real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
+        real(8), intent(in)       :: k2(nx,ny)
+        real(8), intent(in)       :: dt, g, omega, final_time
+        integer, intent(in)       :: nx, ny
+        integer, optional         :: iterations
+
+        integer :: i, steps
+
+        if (.not. present(iterations)) iterations = 2
+        steps = int(final_time / dt)
+
+        do i = 1,steps
+            call SSFM_step(psi, v, kx, ky, k2, x, y, nx, ny, &
+                                    g, omega, dt, iterations)
+        enddo
+
+    end subroutine SSMF_evol
     
 end module gpe_solver

@@ -41,7 +41,7 @@ def test():
     print("Cooling finalizado.")
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(25.0,dt=dt)
+    sim.hydrodynamics(2.0,dt=dt)
 
     # 6. Visualización de resultados
     final_density = sim.wf.density()

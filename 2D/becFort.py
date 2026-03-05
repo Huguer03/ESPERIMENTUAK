@@ -100,78 +100,41 @@ class SSFM:
         self.potential = potential
         self.g         = g
         self.Omega     = Omega
-    
-    def rot(self, psi, angle, n=2):
-        """
-        Angelu txikietarako biraketa
-        """
-        if angle < 0.01:
-            psi_k  = self.grid.fft(psi)
-            dx_psi = self.grid.ifft(1j * self.grid.Kx * psi_k)
-            dy_psi = self.grid.ifft(1j * self.grid.Ky * psi_k)
-            Lz_psi = -1j * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
 
-            num = psi - 0.5j * angle * Lz_psi
-            
-            psi_rot = num.copy()
-            for i in range(n):
-                psi_rot_k = self.grid.fft(psi_rot)
-                dx_rot    = self.grid.ifft(1j * self.grid.Kx * psi_rot_k)
-                dy_rot    = self.grid.ifft(1j * self.grid.Ky * psi_rot_k)
-                Lz_rot    = -1j * (self.grid.X * dy_rot - self.grid.Y * dx_rot)
-                psi_rot   = num - 0.5j * angle * Lz_rot
-
-            return psi_rot
-        else:
-            raise ValueError(f"Angle to big {angle}, please reduce the angular speed or the time step")
-
-    def step(self, psi, dt):
-        """
-        dt pausu bat egiten du, denbora irudikarian (oinarrizko egoera bilatzeko)
-        ez du biraketarik  egiten,  baina  denbora  errealean  bai  egiten duela.
-        """
+    def evol(self, psi, final_time, dt, iterations=2):
+        if self.Omega * dt/2 > 0.01:
+            raise ValueError(f"Angle to big {self.Omega * dt/2}, please reduce the angular speed or the time step")
         V = self.potential(self.grid.X, self.grid.Y)
 
-        # Potentzialean erdipausua
-        psi1 = np.exp(-1j * (V + self.g * np.abs(psi)**2) * dt/2) * psi
+        psi_out = np.asfortranarray(psi.copy()).astype(np.complex128)
+        v       = np.asfortranarray(V).astype(np.float64)
+        kx      = np.asfortranarray(self.grid.Kx).astype(np.float64)
+        ky      = np.asfortranarray(self.grid.Ky).astype(np.float64)
+        k2      = np.asfortranarray(self.grid.K2).astype(np.float64)
+        x       = np.asfortranarray(self.grid.X).astype(np.float64)
+        y       = np.asfortranarray(self.grid.Y).astype(np.float64)
 
-        # Biraketa egotekotan, erdi pausua sartu
-        if self.Omega != 0:
-            psi2 = self.rot(psi1, self.Omega * dt/2)
-        else:
-            psi2 = psi1
+        gpe_solver.gpe_solver.gradient_descent_evol(
+                            psi        = psi_out,
+                            v          = v,
+                            kx         = kx,
+                            ky         = ky,
+                            k2         = k2,
+                            x          = x,
+                            y          = y,
+                            nx         = self.grid.Nx,
+                            ny         = self.grid.Ny,
+                            dx         = self.grid.dx,
+                            dy         = self.grid.dy,
+                            g          = self.g,
+                            omega      = self.Omega,
+                            final_time = final_time,
+                            dt         = dt,
+                            iterations = iterations
+                        )
 
-        # Pausua K espazioan
-        psi_k  = self.grid.fft(psi2)
-        psi_k *= np.exp(-0.5j * self.grid.K2 * dt)
-        psi3   = self.grid.ifft(psi_k)
-
-        # Biraketa egotekotan, erdi pausua sartu
-        if self.Omega != 0:
-            psi4 = self.rot(psi3, self.Omega * dt/2)
-        else:
-            psi4 = psi3
-
-        # Pausua berriz Potentzialean
-        psi_new = np.exp(-1j * (V + self.g * np.abs(psi4)**2) * dt/2) * psi4
-        return psi_new
-    
-
-    def evol(self, psi, final_time, dt, callback=None):
-        steps       = int(final_time / dt)
-        t           = 0.0
-        psi_current = psi.copy()
-
-        for step in range(steps):
-            psi_current = self.step(psi_current, dt)
-            t += dt
-
-            if callback is not None:
-                    callback(t, psi_current)
-
-        return psi_current
   
-    def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, callback=None, random_seed=None, max_iter=1000000):
+    def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, random_seed=None, max_iter=1000000):
         V = self.potential(self.grid.X, self.grid.Y)
         if n_vortex > 0: 
             psi = self.vortex_phase_mask(psi           = psi, 
@@ -255,30 +218,6 @@ class SSFM:
             psi_with_vortices *= vortex_phase
         return psi_with_vortices
 
-    def energy(self, psi):
-        """
-        Energia kalkulatu
-        """
-        psi_k  = fft2(psi)
-        dx_psi = ifft2(1j * self.grid.Kx * psi_k)
-        dy_psi = ifft2(1j * self.grid.Ky * psi_k)
-
-        kin    = 0.5 * (np.abs(dx_psi)**2 + np.abs(dy_psi)**2)
-        E_kin  = np.sum(kin) * self.grid.dx * self.grid.dy
-
-        V      = self.potential(self.grid.X, self.grid.Y)
-        E_pot  = np.sum(V * np.abs(psi)**2) * self.grid.dx * self.grid.dy
-
-        E_int  = self.g * 0.5 * np.sum(np.abs(psi)**4) * self.grid.dx * self.grid.dy
-
-        if self.Omega != 0:
-            Lz_psi      = -1j * (self.grid.X * dy_psi - self.grid.Y * dx_psi)
-            expectation = np.sum(np.conj(psi) * Lz_psi) * self.grid.dx * self.grid.dy
-            E_rot       = -self.Omega * expectation.real
-        else: 
-            E_rot = 0
-
-        return E_kin + E_pot + E_int + E_rot
     
 class Simulation:
     """
@@ -296,33 +235,21 @@ class Simulation:
         self.wf        = WaveFunction(grid, sigma, psi)
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
-    def cooling(self, dt, tol=1E-6, callback=None, max_iter=10000):
+    def cooling(self, dt, tol=1E-6, max_iter=10000):
         print(self.Omega * dt/2)
-        def wrapped_callback(t, psi):
-            self.wf.psi = psi
-            if callback:
-                callback(t, self)
-
         self.wf.psi = self.ssfm.evolcool(psi           = self.wf.psi,
                                         dt             = dt, 
                                         n_vortex       = self.vortex, 
                                         vortex_charges = self.v_charge, 
                                         positions      = self.positions, 
-                                        tol            = tol,
-                                        callback       = wrapped_callback, 
+                                        tol            = tol, 
                                         random_seed    = self.seed,
                                         max_iter       = max_iter
                                         )
         self.wf.normalize()
     
-    def hydrodynamics(self, t_max, dt, callback=None):
-        def wrapped_callback(t, psi):
-            self.wf.psi = psi
-            if callback:
-                callback(t, self)
-
+    def hydrodynamics(self, t_max, dt):
         self.wf.psi = self.ssfm.evol(psi        = self.wf.psi, 
                                      final_time = t_max, 
                                      dt         = dt, 
-                                     callback   = wrapped_callback
                                      )
