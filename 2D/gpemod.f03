@@ -7,40 +7,105 @@ module gpe_solver
     include 'fftw3.f03'
 
     complex(8), parameter :: zi = (0.0d0, 1.0d0)
-    type(C_PTR), private  :: plan_forward, plan_backward
-    logical, private      :: plans_created = .false.
+    type(C_PTR), private  :: plan_foreward_1d_x, plan_backward_1d_x
+    type(C_PTR), private  :: plan_foreward_1d_y, plan_backward_1d_y
+    type(C_PTR), private  :: plan_foreward_2d, plan_backward_2d
 
 contains
 
-    subroutine create_fft_plans(nx, ny)
-        integer, intent(in)     :: nx, ny
-        complex(8), allocatable :: temp(:,:)
-        
-        allocate(temp(nx, ny))
-        plan_forward = fftw_plan_dft_2d(nx, ny, temp, temp, FFTW_FORWARD, FFTW_MEASURE)
-        plan_backward = fftw_plan_dft_2d(nx, ny, temp, temp, FFTW_BACKWARD, FFTW_MEASURE)
-        deallocate(temp)
-        plans_created = .true.
-    end subroutine create_fft_plans
+    subroutine fftw_create_plans_1d(nx, ny)
+        integer, intent(in)       :: nx,ny
+        complex(8), allocatable   :: psi(:,:)
+        integer :: n(1)
 
-    subroutine destroy_fft_plans()
-        if (plans_created) then
-            call fftw_destroy_plan(plan_forward)
-            call fftw_destroy_plan(plan_backward)
-            plans_created = .false.
+        allocate(psi(nx,ny))
+        n(1) = nx
+        plan_foreward_1d_x = fftw_plan_many_dft(1, n, ny, &
+            psi, n, 1, nx, psi, n, 1, nx, FFTW_FORWARD, FFTW_MEASURE)
+        plan_backward_1d_x = fftw_plan_many_dft(1, n, ny, &
+            psi, n, 1, nx, psi, n, 1, nx, FFTW_BACKWARD, FFTW_MEASURE)
+
+        n(1) = ny
+        plan_foreward_1d_y = fftw_plan_many_dft(1, n, nx, &
+            psi, n, nx, 1, psi, n, nx, 1, FFTW_FORWARD, FFTW_MEASURE)
+        plan_backward_1d_y = fftw_plan_many_dft(1, n, nx, &
+            psi, n, nx, 1, psi, n, nx, 1, FFTW_BACKWARD, FFTW_MEASURE)
+        deallocate(psi)
+    end subroutine fftw_create_plans_1d
+
+    subroutine fftw_create_plans_2d(nx, ny)
+        integer, intent(in)     :: nx,ny
+        complex(8), allocatable :: psi(:,:)
+
+        allocate(psi(nx,ny))
+        plan_foreward_2d  = fftw_plan_dft_2d(nx, ny, psi, psi, FFTW_FORWARD, FFTW_MEASURE)
+        plan_backward_2d = fftw_plan_dft_2d(nx, ny, psi, psi, FFTW_BACKWARD, FFTW_MEASURE)
+        deallocate(psi)
+    end subroutine fftw_create_plans_2d
+
+    subroutine fftw_create_plans(nx, ny, dim)
+        integer, intent(in) :: nx,ny,dim
+
+        if (dim == 1) then
+            call fftw_create_plans_1d(nx, ny)
+        elseif (dim == 2) then
+            call fftw_create_plans_2d(nx, ny)
+        else 
+            call fftw_create_plans_1d(nx, ny)
+            call fftw_create_plans_2d(nx, ny)
         end if
-    end subroutine destroy_fft_plans
+    end subroutine fftw_create_plans
+
+    subroutine fftw_destroy_plans(dim)
+        integer, intent(in) :: dim
+
+        if ( dim == 1 ) then
+            call fftw_destroy_plan(plan_foreward_1d_x)
+            call fftw_destroy_plan(plan_backward_1d_x)
+            call fftw_destroy_plan(plan_foreward_1d_y)
+            call fftw_destroy_plan(plan_backward_1d_y)
+        elseif ( dim == 2) then
+            call fftw_destroy_plan(plan_foreward_2d)
+            call fftw_destroy_plan(plan_backward_2d)
+        else 
+            call fftw_destroy_plan(plan_foreward_1d_x)
+            call fftw_destroy_plan(plan_backward_1d_x)
+            call fftw_destroy_plan(plan_foreward_1d_y)
+            call fftw_destroy_plan(plan_backward_1d_y)
+            call fftw_destroy_plan(plan_foreward_2d)
+            call fftw_destroy_plan(plan_backward_2d)
+        end if
+    end subroutine fftw_destroy_plans
+
+    subroutine fft(psi, nx, ny, axis, direction)
+        complex(8), intent(inout) :: psi(nx, ny)
+        integer, intent(in)       :: nx, ny, direction, axis
+
+        if (axis == 1) then 
+            if (direction == 1) then
+                call fftw_execute_dft(plan_foreward_1d_x, psi, psi)
+            else
+                call fftw_execute_dft(plan_backward_1d_x, psi, psi)
+                psi = psi / real(nx, 8)
+            end if
+        else if (axis == 2) then
+            if (direction == 1) then
+                call fftw_execute_dft(plan_foreward_1d_y, psi, psi)
+            else
+                call fftw_execute_dft(plan_backward_1d_y, psi, psi)
+                psi = psi / real(ny, 8)
+            end if
+        end if
+    end subroutine fft
 
     subroutine fft2(psi, nx, ny, direction)
         complex(8), intent(inout) :: psi(nx, ny)
         integer, intent(in)       :: nx, ny, direction
-        
-        if (.not. plans_created) call create_fft_plans(nx, ny)
-        
+
         if (direction == 1) then
-            call fftw_execute_dft(plan_forward, psi, psi)
+            call fftw_execute_dft(plan_foreward_2d, psi, psi)
         else
-            call fftw_execute_dft(plan_backward, psi, psi)
+            call fftw_execute_dft(plan_backward_2d, psi, psi)
             psi = psi / real(nx * ny, 8)
         end if
     end subroutine fft2
@@ -141,6 +206,8 @@ contains
         if (.not. present(max_iter)) max_iter = 100000
         if (.not. present(tol)) tol = 1e-6
 
+        call fftw_create_plans(nx, ny, 2)
+
         E_old = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, g, omega)
 
         do i = 1, max_iter
@@ -162,70 +229,80 @@ contains
             converge = .false.
         end if
 
-        call destroy_fft_plans()
+        call fftw_destroy_plans(2)
     end subroutine gradient_descent_evol 
 
-    subroutine rot(psi, angle, kx, ky, x, y, nx, ny, iterations)
+    subroutine rot(psi, angle, kx, ky, x, y, nx, ny)
         complex(8), intent(inout) :: psi(nx,ny)
         real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
         real(8), intent(in)       :: x(nx,ny), y(nx,ny)
         real(8), intent(in)       :: angle
-        integer, intent(in)       :: nx, ny, iterations
+        integer, intent(in)       :: nx, ny
 
-        complex(8) :: psi_k(nx,ny), Lz_psi(nx,ny)
-        complex(8) :: dx_psi(nx,ny), dy_psi(nx,ny)
-        real(8)    :: step
-        integer    :: i
+        real(8) :: alpha, beta
+        integer :: j, i
+        real(8) :: kx_vec(nx), ky_vec(ny)
+        real(8) :: x_vec(nx), y_vec(ny)
 
-        step  = 1.0d0 / real(iterations, 8)
-        psi_k = psi
+        kx_vec = kx(:, 1)
+        ky_vec = ky(1, :)
+        x_vec  = x(:, 1)
+        y_vec  = y(1, :)
 
-        do i = 1, iterations
-            call fft2(psi_k, nx, ny, 1)
+        alpha = -tan(angle / 2.0d0)
+        beta  = sin(angle)
 
-            dx_psi = zi * kx * psi_k
-            dy_psi = zi * ky * psi_k
-            call fft2(dx_psi, nx, ny, -1)
-            call fft2(dy_psi, nx, ny, -1)
-
-            Lz_psi = -zi * (x * dy_psi - y * dx_psi)
-            psi    = psi - zi * step * angle * Lz_psi
-            psi_k  = psi
+        call fft(psi, nx, ny, 1, 1)
+        do j = 1, ny
+            psi(:, j) = psi(:, j) * exp(-zi * kx_vec * (alpha * y_vec(j)))
         end do
+        call fft(psi, nx, ny, 1, -1)
+
+        call fft(psi, nx, ny, 2, 1)
+        do i = 1, nx
+            psi(i, :) = psi(i, :) * exp(-zi * ky_vec * (beta * x_vec(i)))
+        end do
+        call fft(psi, nx, ny, 2, -1)
+
+        call fft(psi, nx, ny, 1, 1)
+        do j = 1, ny
+            psi(:, j) = psi(:, j) * exp(-zi * kx_vec * (alpha * y_vec(j)))
+        end do
+        call fft(psi, nx, ny, 1, -1)
     end subroutine rot
 
-    subroutine SSFM_step(psi, v, kx, ky, k2, x, y, nx, ny, &
-                                    g, omega, dt, iterations)
+    subroutine ssfm_step(psi, v, kx, ky, k2, x, y, nx, ny, &
+                                    g, omega, dt)
         complex(8), intent(inout) :: psi(nx,ny)
         real(8), intent(in)       :: v(nx,ny)
         real(8), intent(in)       :: x(nx,ny), y(nx,ny)
         real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
         real(8), intent(in)       :: k2(nx,ny)
         real(8), intent(in)       :: dt, g, omega
-        integer, intent(in)       :: nx, ny, iterations
+        integer, intent(in)       :: nx, ny
 
         real(8)    :: angle
 
         angle = omega * dt / 2.0d0
-        psi   = exp(zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
+        psi   = exp(-zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
 
         if (omega /= 0.0d0) then
-            call rot(psi, angle, kx, ky, x, y, nx, ny, iterations)
+            call rot(psi, angle, kx, ky, x, y, nx, ny)
         end if
 
         call fft2(psi, nx, ny, 1)
-        psi = exp(-0.5 * zi * k2 * dt) * psi
+        psi = exp(-0.5d0 * zi * k2 * dt) * psi
         call fft2(psi, nx, ny, -1)
 
         if (omega /= 0.0d0) then
-            call rot(psi, angle, kx, ky, x, y, nx, ny, iterations)
+            call rot(psi, angle, kx, ky, x, y, nx, ny)
         end if
 
-        psi   = exp(zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
-    end subroutine SSFM_step
+        psi = exp(-zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
+    end subroutine ssfm_step
 
-    subroutine SSMF_evol(psi, v, kx, ky, k2, x, y, nx, ny, &
-                                    g, omega, final_time, dt, iterations)
+    subroutine ssfm_evol(psi, v, kx, ky, k2, x, y, nx, ny,&
+                                    g, omega, final_time, dt)
         complex(8), intent(inout) :: psi(nx,ny)
         real(8), intent(in)       :: v(nx,ny)
         real(8), intent(in)       :: x(nx,ny), y(nx,ny)
@@ -233,18 +310,19 @@ contains
         real(8), intent(in)       :: k2(nx,ny)
         real(8), intent(in)       :: dt, g, omega, final_time
         integer, intent(in)       :: nx, ny
-        integer, optional         :: iterations
 
         integer :: i, steps
 
-        if (.not. present(iterations)) iterations = 2
+        call fftw_create_plans(nx, ny, 0)
+        
         steps = int(final_time / dt)
 
         do i = 1,steps
-            call SSFM_step(psi, v, kx, ky, k2, x, y, nx, ny, &
-                                    g, omega, dt, iterations)
+            call ssfm_step(psi, v, kx, ky, k2, x, y, nx, ny, &
+                                    g, omega, dt)
         enddo
+        
+        call fftw_destroy_plans(0)
+    end subroutine ssfm_evol
 
-    end subroutine SSMF_evol
-    
 end module gpe_solver

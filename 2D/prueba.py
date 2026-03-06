@@ -25,7 +25,7 @@ def test():
     sim = Simulation(grid          = grid, 
                      potential     = potential, 
                      g             = 500.0, 
-                     Omega         = 0.7, 
+                     Omega         = 0.9, 
                      n_vortex      = 0, 
                      vortex_charge = vortex_charges, 
                      positions     = None
@@ -33,34 +33,66 @@ def test():
     
     print("Iniciando proceso de cooling (Gradient descent)...")
     
-    # L[0]/2. Ejecutar el cooling
-    # tau_max: tiempo total de evolución imaginaria
-    # dt: paso de tiempo (debe ser pequeño para estabilidad)
-    sim.cooling(dt, max_iter=1000000)
+    # 4. Ejecutar el cooling
+    sim.cooling(dt, max_iter=100000)
 
     print("Cooling finalizado.")
+    density0 = sim.wf.density()
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(2.0,dt=dt)
+    sim.hydrodynamics(5.0,dt=dt)
+    density5 = sim.wf.density()
+    print(5)
+
+    sim.hydrodynamics(5.0,dt=dt)
+    density10 = sim.wf.density()
+    print(10)
+
+    sim.hydrodynamics(5.0,dt=dt)
+    density15 = sim.wf.density()
+    print(15)
+
+    sim.hydrodynamics(5.0,dt=dt)
+    density20 = sim.wf.density()
+    print(20)
+
+    sim.hydrodynamics(5.0,dt=dt)
+    density25 = sim.wf.density()
+    print(25)
 
     # 6. Visualización de resultados
-    final_density = sim.wf.density()
-    final_phase   = sim.wf.phase()
+    fig, ax = plt.subplots(2, 3, figsize=(12, 5))
+    zoom_region = [-8, 8, -8, 8]
 
-    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
-    zoom_region = [-6, 6, -6, 6]
+    im0 = ax[0,0].imshow(density0, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    ax[0,0].set_title(r"$|\Psi|^2 (t=0s)$")
+    ax[0,0].axis(zoom_region)
+    fig.colorbar(im0, ax=ax[0,0])
 
-    # Gráfico Estado Inicial
-    im0 = ax[0].imshow(final_phase, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2], cmap='twilight', vmin=-np.pi, vmax=np.pi, origin='lower', interpolation='bilinear')
-    ax[0].set_title("Fase")
-    ax[0].axis(zoom_region)
-    fig.colorbar(im0, ax=ax[0])
+    im1 = ax[0,1].imshow(density5, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    ax[0,1].set_title(r"$|\Psi|^2 (t=5s)$")
+    ax[0,1].axis(zoom_region)
+    fig.colorbar(im1, ax=ax[0,1])
 
-    # Gráfico Estado Final (tras cooling)
-    im1 = ax[1].imshow(final_density, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
-    ax[1].set_title("Densidad")
-    ax[1].axis(zoom_region)
-    fig.colorbar(im1, ax=ax[1])
+    im2 = ax[0,2].imshow(density10, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    ax[0,2].set_title(r"$|\Psi|^2 (t=10s)$")
+    ax[0,2].axis(zoom_region)
+    fig.colorbar(im2, ax=ax[0,2])
+
+    im3 = ax[1,0].imshow(density15, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    ax[1,0].set_title(r"$|\Psi|^2 (t=15s)$")
+    ax[1,0].axis(zoom_region)
+    fig.colorbar(im3, ax=ax[1,0])
+
+    im4 = ax[1,1].imshow(density20, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    ax[1,1].set_title(r"$|\Psi|^2 (t=20s)$")
+    ax[1,1].axis(zoom_region)
+    fig.colorbar(im4, ax=ax[1,1])
+
+    im5 = ax[1,2].imshow(density25, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2])
+    ax[1,2].set_title(r"$|\Psi|^2 (t=25s)$")
+    ax[1,2].axis(zoom_region)
+    fig.colorbar(im5, ax=ax[1,2])
 
     plt.tight_layout()
     plt.show()

@@ -101,7 +101,7 @@ class SSFM:
         self.g         = g
         self.Omega     = Omega
 
-    def evol(self, psi, final_time, dt, iterations=2):
+    def evol(self, psi, final_time, dt):
         if self.Omega * dt/2 > 0.01:
             raise ValueError(f"Angle to big {self.Omega * dt/2}, please reduce the angular speed or the time step")
         V = self.potential(self.grid.X, self.grid.Y)
@@ -114,7 +114,7 @@ class SSFM:
         x       = np.asfortranarray(self.grid.X).astype(np.float64)
         y       = np.asfortranarray(self.grid.Y).astype(np.float64)
 
-        gpe_solver.gpe_solver.gradient_descent_evol(
+        gpe_solver.gpe_solver.ssfm_evol(
                             psi        = psi_out,
                             v          = v,
                             kx         = kx,
@@ -124,15 +124,12 @@ class SSFM:
                             y          = y,
                             nx         = self.grid.Nx,
                             ny         = self.grid.Ny,
-                            dx         = self.grid.dx,
-                            dy         = self.grid.dy,
                             g          = self.g,
                             omega      = self.Omega,
                             final_time = final_time,
-                            dt         = dt,
-                            iterations = iterations
+                            dt         = dt
                         )
-
+        return psi_out
   
     def evolcool(self, psi, dt, n_vortex=0, vortex_charges=None, positions=None, tol=1E-6, random_seed=None, max_iter=1000000):
         V = self.potential(self.grid.X, self.grid.Y)
