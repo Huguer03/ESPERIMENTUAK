@@ -26,8 +26,8 @@ def test():
                      potential     = potential, 
                      g             = 500.0, 
                      Omega         = 0.9, 
-                     n_vortex      = 0, 
-                     vortex_charge = vortex_charges, 
+                     n_vortex      = 20, 
+                     vortex_charge = None, 
                      positions     = None
                      )
     

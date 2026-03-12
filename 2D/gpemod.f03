@@ -283,22 +283,23 @@ contains
 
         real(8)    :: angle
 
-        angle = omega * dt / 2.0d0
+        angle = omega * dt
+
+        call fft2(psi, nx, ny, 1)
+        psi = exp(-0.5d0 * zi * k2 * dt/2.0d0) * psi
+        call fft2(psi, nx, ny, -1)
+
         psi   = exp(-zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
 
         if (omega /= 0.0d0) then
             call rot(psi, angle, kx, ky, x, y, nx, ny)
         end if
 
-        call fft2(psi, nx, ny, 1)
-        psi = exp(-0.5d0 * zi * k2 * dt) * psi
-        call fft2(psi, nx, ny, -1)
-
-        if (omega /= 0.0d0) then
-            call rot(psi, angle, kx, ky, x, y, nx, ny)
-        end if
-
         psi = exp(-zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
+
+        call fft2(psi, nx, ny, 1)
+        psi = exp(-0.5d0 * zi * k2 * dt/2.0d0) * psi
+        call fft2(psi, nx, ny, -1)
     end subroutine ssfm_step
 
     subroutine ssfm_evol(psi, v, kx, ky, k2, x, y, nx, ny,&

@@ -19,16 +19,16 @@ def test():
 
     # 2. Definir el potencial (Trampa armónica)
     # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(1.0, 1.5))
+    potential = TrapPotential(omega=(1.0, 1.1))
 
     # 3. Crear la simulación
     sim = Simulation(grid          = grid, 
                      potential     = potential, 
                      g             = 500.0, 
                      Omega         = 0.9, 
-                     n_vortex      = 0, 
+                     n_vortex      = 4, 
                      vortex_charge = vortex_charges, 
-                     positions     = None
+                     positions     = positions
                      )
     
     print("Iniciando proceso de cooling (Gradient descent)...")
