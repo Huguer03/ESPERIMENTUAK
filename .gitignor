@@ -1,1 +1,3 @@
 *.gif
+.vscode
+__pycache__
