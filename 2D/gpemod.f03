@@ -21,15 +21,15 @@ contains
         allocate(psi(nx,ny))
         n(1) = nx
         plan_foreward_1d_x = fftw_plan_many_dft(1, n, ny, &
-            psi, n, 1, nx, psi, n, 1, nx, FFTW_FORWARD, FFTW_MEASURE)
+            psi, n, 1, nx, psi, n, 1, nx, FFTW_FORWARD, FFTW_PATIENT)
         plan_backward_1d_x = fftw_plan_many_dft(1, n, ny, &
-            psi, n, 1, nx, psi, n, 1, nx, FFTW_BACKWARD, FFTW_MEASURE)
+            psi, n, 1, nx, psi, n, 1, nx, FFTW_BACKWARD, FFTW_PATIENT)
 
         n(1) = ny
         plan_foreward_1d_y = fftw_plan_many_dft(1, n, nx, &
-            psi, n, nx, 1, psi, n, nx, 1, FFTW_FORWARD, FFTW_MEASURE)
+            psi, n, nx, 1, psi, n, nx, 1, FFTW_FORWARD, FFTW_PATIENT)
         plan_backward_1d_y = fftw_plan_many_dft(1, n, nx, &
-            psi, n, nx, 1, psi, n, nx, 1, FFTW_BACKWARD, FFTW_MEASURE)
+            psi, n, nx, 1, psi, n, nx, 1, FFTW_BACKWARD, FFTW_PATIENT)
         deallocate(psi)
     end subroutine fftw_create_plans_1d
 
@@ -38,8 +38,8 @@ contains
         complex(8), allocatable :: psi(:,:)
 
         allocate(psi(nx,ny))
-        plan_foreward_2d  = fftw_plan_dft_2d(nx, ny, psi, psi, FFTW_FORWARD, FFTW_MEASURE)
-        plan_backward_2d = fftw_plan_dft_2d(nx, ny, psi, psi, FFTW_BACKWARD, FFTW_MEASURE)
+        plan_foreward_2d  = fftw_plan_dft_2d(nx, ny, psi, psi, FFTW_FORWARD, FFTW_PATIENT)
+        plan_backward_2d = fftw_plan_dft_2d(nx, ny, psi, psi, FFTW_BACKWARD, FFTW_PATIENT)
         deallocate(psi)
     end subroutine fftw_create_plans_2d
 
