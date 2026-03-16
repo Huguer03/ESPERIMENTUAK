@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from becFort import Grid, TrapPotential, Simulation
+import scienceplots
+plt.style.use(['science'])
 
 def test():
     # 1. Configuración de la malla (Grid)

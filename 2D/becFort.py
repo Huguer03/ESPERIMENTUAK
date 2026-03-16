@@ -233,7 +233,6 @@ class Simulation:
         self.ssfm      = SSFM(grid, potential, g, Omega)
 
     def cooling(self, dt, tol=1E-6, max_iter=10000):
-        print(self.Omega * dt/2)
         self.wf.psi = self.ssfm.evolcool(psi           = self.wf.psi,
                                         dt             = dt, 
                                         n_vortex       = self.vortex, 
