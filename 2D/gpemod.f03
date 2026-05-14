@@ -295,8 +295,6 @@ contains
             call rot(psi, angle, kx, ky, x, y, nx, ny)
         end if
 
-        !psi = exp(-zi * (v + g * abs(psi)**2) * dt/2.0d0) * psi
-
         call fft2(psi, nx, ny, 1)
         psi = exp(-0.5d0 * zi * k2 * dt/2.0d0) * psi
         call fft2(psi, nx, ny, -1)
