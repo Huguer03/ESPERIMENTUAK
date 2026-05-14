@@ -27,7 +27,7 @@ def test():
     sim = Simulation(grid          = grid, 
                      potential     = potential, 
                      g             = 3000.0, 
-                     Omega         = 0.9999, 
+                     Omega         = 0.999, 
                      n_vortex      = 0, 
                      vortex_charge = None, 
                      positions     = None
@@ -37,30 +37,46 @@ def test():
     
     # 4. Ejecutar el cooling
     sim.cooling(dt, max_iter=100000)
+    t = [0,5,10,15,20,25]
+    norma = []
 
     print("Cooling finalizado.")
     density0 = sim.wf.density()
+    norma.append(sim.wf.norma())
 
     # 5. Vamos a simular la hidrodinamica
-    sim.hydrodynamics(5.0,dt=dt)
-    density5 = sim.wf.density()
+    sim.hydrodynamics(1.0,dt=dt)
+    density_sim = sim.wf.density()
+    norma.append(sim.wf.norma())
     print(5)
 
+    sim.hydrodynamics(1.0,dt=dt)
+    density_sim = sim.wf.density()
+    norma.append(sim.wf.norma())
+    print(10)
+
+    sim.hydrodynamics(1.0,dt=dt)
+    density_sim = sim.wf.density()
+    norma.append(sim.wf.norma())
+    print(15)
+
+    sim.hydrodynamics(1.0,dt=dt)
+    density_sim = sim.wf.density()
+    norma.append(sim.wf.norma())
+    print(20)
+
+    sim.hydrodynamics(1.0,dt=dt)
+    density_sim = sim.wf.density()
+    norma.append(sim.wf.norma())
+    print(25)
+
     # 6. Visualización de resultados
-    fig, ax = plt.subplots(1, 2, figsize=(12, 5))
-    zoom_region = [-11, 11, -11, 11]
-
-    im0 = ax[0].imshow(density0, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2], cmap='inferno')
-    ax[0].set_title(r"$|\Psi|^2 (t=0s)$")
-    ax[0].axis(zoom_region)
-    fig.colorbar(im0, ax=ax[0])
-
-    im1 = ax[1].imshow(density5, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2], cmap='inferno')
-    ax[1].set_title(r"$|\Psi|^2 (t=5s)$")
-    ax[1].axis(zoom_region)
-    fig.colorbar(im1, ax=ax[1])
-
-    plt.tight_layout()
+    plt.figure(figsize=(8, 6))
+    plt.plot(t, norma, label='norma') 
+    plt.xlabel(r'$t(s)$')
+    plt.ylabel(r'$Norma$')
+    plt.legend()
+    plt.grid(True)
     plt.show()
 
 if __name__ == "__main__":

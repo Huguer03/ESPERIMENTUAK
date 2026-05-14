@@ -77,6 +77,10 @@ class WaveFunction:
         phase = np.angle(self.psi)
         return phase
 
+    def norma(self):
+        norma = np.sum(np.abs(self.psi)**2) * self.grid.dx * self.grid.dy
+        return norma
+
 class TrapPotential:
     """
     Erabiliko dugu potentzial harmonikoa
