@@ -85,29 +85,27 @@ class TrapPotential:
     """
     Erabiliko dugu potentzial harmonikoa
     """
-    def __init__(self, omega):
+    def __init__(self, gamma):
         """
-        omega: tupla bat da non (omega_x, omega_y)
+        gamma: tupla bat da non (gamma_x, gamma_y)
         """
-        self.omega_x, self.omega_y = omega
+        self.gamma_x, self.gamma_y = gamma
 
     def __call__(self, X, Y):
-        return 0.5 * (self.omega_x**2 * X**2 + self.omega_y**2 * Y**2)
+        return 0.5 * (self.gamma_x**2 * X**2 + self.gamma_y**2 * Y**2)
 
 class SSFM:
     """
     Bigarren  ordeneko   splip-step  Fourier   metodoa 
     erabiliko dugu GPE ekuazioa biraketarekin ebazteko.
     """
-    def __init__(self, grid, potential, g=0, Omega=0):
+    def __init__(self, grid, potential, beta=0, Omega=0):
         self.grid      = grid
         self.potential = potential
-        self.g         = g
+        self.beta      = beta
         self.Omega     = Omega
 
     def evol(self, psi, final_time, dt):
-        if self.Omega * dt/2 > 0.01:
-            raise ValueError(f"Angle to big {self.Omega * dt/2}, please reduce the angular speed or the time step")
         V = self.potential(self.grid.X, self.grid.Y)
 
         psi_out = np.asfortranarray(psi.copy()).astype(np.complex128)
@@ -128,7 +126,7 @@ class SSFM:
                             y          = y,
                             nx         = self.grid.Nx,
                             ny         = self.grid.Ny,
-                            g          = self.g,
+                            beta       = self.beta,
                             omega      = self.Omega,
                             final_time = final_time,
                             dt         = dt
@@ -165,7 +163,7 @@ class SSFM:
                                             ny       = self.grid.Ny,
                                             dx       = self.grid.dx,
                                             dy       = self.grid.dy,
-                                            g        = self.g,
+                                            beta     = self.beta,
                                             omega    = self.Omega,
                                             dt       = dt,
                                             max_iter = max_iter,
@@ -219,22 +217,29 @@ class SSFM:
             psi_with_vortices *= vortex_phase
         return psi_with_vortices
 
+class ThomasFermi:
+    """
+    Hurbilketa
+    """
+    def __init__(self, gamma, Omega=0, beta=0):
+        self.mutf      = np.sqrt(beta / np.pi)
+        self.rtf       = ((4.0 * beta) / ((np.max(gamma)**2 - Omega**2) * np.pi))**0.25
     
 class Simulation:
     """
     Simulazioa manipulatzeko erabiliko duguna
     """
-    def __init__(self, grid, potential, g=0, Omega=0, n_vortex=0, vortex_charge=None, positions=None, sigma=(1.0,1.0), psi=None, seed=None):
+    def __init__(self, grid, gamma, beta=0, Omega=0, n_vortex=0, vortex_charge=None, positions=None, sigma=(1.0,1.0), psi=None, seed=None):
         self.grid      = grid
-        self.potential = potential
+        self.potential = TrapPotential(gamma)
         self.vortex    = n_vortex
         self.v_charge  = vortex_charge
         self.positions = positions
-        self.g         = g
-        self.Omega     = Omega 
+        self.beta      = beta
+        self.Omega     = Omega * max(gamma)
         self.seed      = seed
         self.wf        = WaveFunction(grid, sigma, psi)
-        self.ssfm      = SSFM(grid, potential, g, Omega)
+        self.ssfm      = SSFM(grid, self.potential, beta, self.Omega)
 
     def cooling(self, dt, tol=1E-6, max_iter=10000):
         self.wf.psi = self.ssfm.evolcool(psi           = self.wf.psi,
@@ -249,6 +254,8 @@ class Simulation:
         self.wf.normalize()
     
     def hydrodynamics(self, t_max, dt):
+        print(t_max / dt)
+        print(self.Omega*dt)
         self.wf.psi = self.ssfm.evol(psi        = self.wf.psi, 
                                      final_time = t_max, 
                                      dt         = dt, 

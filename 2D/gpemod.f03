@@ -111,12 +111,12 @@ contains
     end subroutine fft2
 
     subroutine gradient_descent_step(psi, v, kx, ky, k2, x, y, nx, ny, dx, dy, &
-                                    g, omega, dt)
+                                    beta, omega, dt)
         complex(8), intent(inout) :: psi(nx, ny)
         real(8), intent(in) :: v(nx, ny), kx(nx, ny), ky(nx, ny), k2(nx, ny)
         real(8), intent(in) :: x(nx, ny), y(nx, ny)
         integer, intent(in) :: nx, ny
-        real(8), intent(in) :: dx, dy, g, omega, dt
+        real(8), intent(in) :: dx, dy, beta, omega, dt
         
         complex(8) :: psi_k(nx, ny), grad(nx, ny)
         complex(8) :: dx_psi(nx, ny), dy_psi(nx, ny)
@@ -131,7 +131,7 @@ contains
         temp = -k2 * psi_k
         call fft2(temp, nx, ny, -1)
 
-        grad = -0.5d0 * temp + v * psi + g * abs(psi)**2 * psi
+        grad = -0.5d0 * temp + v * psi + beta * abs(psi)**2 * psi
 
         if (omega /= 0.0d0) then
             call fft2(dx_psi, nx, ny, -1)
@@ -147,19 +147,19 @@ contains
     end subroutine gradient_descent_step
 
     function energy(psi, v, kx, ky, x, y, nx, ny, dx, dy,&
-                                     g, omega) result(E)
+                                     beta, omega) result(E)
         complex(8), intent(in) :: psi(nx, ny)
         real(8), intent(in) :: v(nx, ny), kx(nx, ny), ky(nx, ny)
         real(8), intent(in) :: x(nx, ny), y(nx, ny)
         integer, intent(in) :: nx, ny
-        real(8), intent(in) :: dx, dy, g, omega
+        real(8), intent(in) :: dx, dy, beta, omega
         
         complex(8) :: psi_k(nx, ny)
         complex(8) :: dx_psi(nx, ny), dy_psi(nx, ny)
         complex(8) :: Lz_psi(nx,ny)
         complex(8) :: expextation
         real(8) :: laplacian(nx,ny)
-        real(8) :: E_kin, E_pot, E_g, E_rot, E
+        real(8) :: E_kin, E_pot, E_beta, E_rot, E
 
         psi_k = psi
         call fft2(psi_k, nx, ny, 1)
@@ -174,9 +174,9 @@ contains
 
         E_pot = sum(abs(psi)**2 * v) * dx * dy
 
-        E_g = 0.5d0 * g * sum(abs(psi)**4) * dx * dy
+        E_beta = 0.5d0 * beta * sum(abs(psi)**4) * dx * dy
 
-        E = E_kin + E_pot + E_g
+        E = E_kin + E_pot + E_beta
 
         if (omega /= 0.0d0) then
             Lz_psi = -zi * (x * dy_psi - y * dx_psi)
@@ -190,17 +190,17 @@ contains
     end function energy
 
     subroutine gradient_descent_evol(psi, v, kx, ky, k2, x, y, nx, ny, dx, dy, &
-                                    g, omega, dt, max_iter, tol, converge)
+                                    beta, omega, dt, max_iter, tol, converge)
         complex(8), intent(inout) :: psi(nx, ny)
         real(8), intent(in)  :: v(nx, ny), kx(nx, ny), ky(nx, ny), k2(nx, ny)
         real(8), intent(in)  :: x(nx, ny), y(nx, ny)
         integer, intent(in)  :: nx, ny
-        real(8), intent(in)  :: dx, dy, g, omega, dt
+        real(8), intent(in)  :: dx, dy, beta, omega, dt
         logical, intent(out) :: converge
         integer, optional    :: max_iter
         real(8), optional    :: tol
 
-        real(8)    :: E_rel, E_new, E_old
+        real(8)    :: E_rel, E_new, E_old, norm
         integer    :: i
 
         if (.not. present(max_iter)) max_iter = 100000
@@ -208,13 +208,15 @@ contains
 
         call fftw_create_plans(nx, ny, 2)
 
-        E_old = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, g, omega)
+        E_old = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, beta, omega)
 
         do i = 1, max_iter
             call gradient_descent_step(psi, v, kx, ky, k2, x, y, nx, ny,&
-                                         dx, dy, g, omega, dt)
+                                         dx, dy, beta, omega, dt)
             if ( modulo(i,10) == 0 ) then
-                E_new = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, g, omega)
+                norm  = sum(abs(psi)**2) * dx * dy
+                psi   = psi / sqrt(norm)
+                E_new = energy(psi, v, kx, ky, x, y, nx, ny, dx, dy, beta, omega)
                 E_rel = abs(E_new - E_old) / E_old
                 E_old = E_new
                 if ( E_rel < tol ) then
@@ -272,53 +274,58 @@ contains
     end subroutine rot
 
     subroutine ssfm_step(psi, v, kx, ky, k2, x, y, nx, ny, &
-                                    g, omega, dt)
+                                    beta, angle, dt)
         complex(8), intent(inout) :: psi(nx,ny)
         real(8), intent(in)       :: v(nx,ny)
         real(8), intent(in)       :: x(nx,ny), y(nx,ny)
         real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
         real(8), intent(in)       :: k2(nx,ny)
-        real(8), intent(in)       :: dt, g, omega
+        real(8), intent(in)       :: dt, beta, angle
         integer, intent(in)       :: nx, ny
 
-        real(8)    :: angle
+        psi   = exp(-zi * (v + beta * abs(psi)**2) * dt * 0.5d0) * psi
 
-        angle = omega * dt
+        if (angle /= 0.0d0) then
+            call fft2(psi, nx, ny, 1)
+            psi = exp(-0.25d0 * zi * k2 * dt) * psi
+            call fft2(psi, nx, ny, -1)
 
-        call fft2(psi, nx, ny, 1)
-        psi = exp(-0.5d0 * zi * k2 * dt/2.0d0) * psi
-        call fft2(psi, nx, ny, -1)
-
-        psi   = exp(-zi * (v + g * abs(psi)**2) * dt) * psi
-
-        if (omega /= 0.0d0) then
             call rot(psi, angle, kx, ky, x, y, nx, ny)
+
+            call fft2(psi, nx, ny, 1)
+            psi = exp(-0.25d0 * zi * k2 * dt) * psi
+            call fft2(psi, nx, ny, -1)
+
+        else
+            call fft2(psi, nx, ny, 1)
+            psi = exp(-0.5d0 * zi * k2 * dt) * psi
+            call fft2(psi, nx, ny, -1)
         end if
 
-        call fft2(psi, nx, ny, 1)
-        psi = exp(-0.5d0 * zi * k2 * dt/2.0d0) * psi
-        call fft2(psi, nx, ny, -1)
+        psi   = exp(-zi * (v + beta * abs(psi)**2) * dt * 0.5d0) * psi
     end subroutine ssfm_step
 
     subroutine ssfm_evol(psi, v, kx, ky, k2, x, y, nx, ny,&
-                                    g, omega, final_time, dt)
+                                    beta, omega, final_time, dt)
         complex(8), intent(inout) :: psi(nx,ny)
         real(8), intent(in)       :: v(nx,ny)
         real(8), intent(in)       :: x(nx,ny), y(nx,ny)
         real(8), intent(in)       :: kx(nx,ny), ky(nx,ny)
         real(8), intent(in)       :: k2(nx,ny)
-        real(8), intent(in)       :: dt, g, omega, final_time
+        real(8), intent(in)       :: dt, beta, omega, final_time
         integer, intent(in)       :: nx, ny
 
+        real(8) :: angle
         integer :: i, steps
 
         call fftw_create_plans(nx, ny, 0)
         
         steps = int(final_time / dt)
+        angle = omega * dt
 
         do i = 1,steps
             call ssfm_step(psi, v, kx, ky, k2, x, y, nx, ny, &
-                                    g, omega, dt)
+                                    beta, angle, dt)
         enddo
         
         call fftw_destroy_plans(0)

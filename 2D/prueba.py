@@ -17,14 +17,10 @@ def test():
         (0.0, -2.0)
     ]
 
-    # 2. Definir el potencial (Trampa armónica)
-    # omega_x = 1.0, omega_y = 1.0 (trampa simétrica)
-    potential = TrapPotential(omega=(1.0, 1.0))
-
     # 3. Crear la simulación
     sim = Simulation(grid          = grid, 
-                     potential     = potential, 
-                     g             = 3000.0, 
+                     gamma         = (1.0, 1.0), 
+                     beta          = 3000.0, 
                      Omega         = 0.99, 
                      n_vortex      = 70, 
                      vortex_charge = None, 
@@ -62,7 +58,7 @@ def test():
 
     # 6. Visualización de resultados
     fig, ax = plt.subplots(2, 3, figsize=(12, 5))
-    zoom_region = [-8, 8, -8, 8]
+    zoom_region = [-sim.rtf, sim.rtf, -sim.rtf, sim.rtf]
 
     im0 = ax[0,0].imshow(density0, extent=[-L[0]/2, L[0]/2, -L[1]/2, L[1]/2], cmap='inferno')
     ax[0,0].set_title(r"$|\Psi|^2 (t=0s)$")
